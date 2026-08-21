@@ -42,9 +42,3 @@ spotbugs {
     includeFilter = file("config/spotbugs/spotbugs.xml")
 }
 
-shadowJar {
-    archiveBaseName.set("QuickTrash")
-    archiveVersion.set(project.version.toString())
-    archiveClassifier.set("")
-    relocate("org.bstats", project.group.toString())
-}
