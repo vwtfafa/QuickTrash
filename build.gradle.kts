@@ -1,5 +1,6 @@
 plugins {
     java
+    checkstyle
 }
 
 group = "org.example"
@@ -23,4 +24,9 @@ java {
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
     options.compilerArgs.add("-Xlint:deprecation")
+}
+
+checkstyle {
+    toolVersion = "10.26.0"
+    configDirectory = file("config/checkstyle")
 }
