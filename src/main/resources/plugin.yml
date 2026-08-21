@@ -1,6 +1,6 @@
 name: QuickTrash
-version: '${version}'
-main: org.example.quicktrash.QuickTrash
+version: '1.0.0'
+main: org.vwtfafa.quicktrash.QuickTrash
 api-version: '26.2'
 author: QuickTrash
 description: A fast, safe player trash inventory.
