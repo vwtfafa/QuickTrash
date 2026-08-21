@@ -78,7 +78,7 @@ valuable-items:
 
 ## Metrics
 
-This plugin uses [bStats](https://bstats.org/plugin/bukkit/QuickTrash/9756) to collect anonymous usage statistics. No personal data is collected. You can opt-out by disabling bStats in your server's `plugins/bStats/config.yml`.
+This plugin uses [bStats](https://bstats.org/plugin/bukkit/QuickTrash/33565) to collect anonymous usage statistics. No personal data is collected. You can opt-out by disabling bStats in your server's `plugins/bStats/config.yml`.
 
 ## Requirements
 
