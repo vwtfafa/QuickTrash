@@ -4,7 +4,7 @@ plugins {
     id("com.github.spotbugs") version "6.5.10"
 }
 
-group = "org.example"
+group = "org.vwtfafa"
 version = "1.0.0"
 
 repositories {
