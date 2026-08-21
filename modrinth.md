@@ -1,53 +1,53 @@
-# QuickTrash — Kurzbeschreibung (für Modrinth)
+# QuickTrash — Short Description (for Modrinth)
 
-**QuickTrash** ist ein leichtes Paper 26.2+ Plugin, das einen temporären Trash-Inventory für Spieler bereitstellt. Spieler können über `/trash` ein 18-Slot großes Behältnis öffnen, in das sie Gegenstände ablegen können. Inhalte werden gespeichert und nach einer konfigurierbaren Zeit automatisch gelöscht. Wertvolle Gegenstände (verzaubert, benannt oder in der Konfiguration definiert) erfordern eine Bestätigung vor dem Löschen. Shift-Klick löscht Gegenstände sofort. Das Plugin verwendet bStats für anonyme Nutzungsstatistiken.
+**QuickTrash** is a lightweight Paper 26.2+ plugin that provides a temporary trash inventory for players. Players can open an 18-slot container via `/trash` to store items. Contents are saved and automatically deleted after a configurable time. Valuable items (enchanted, named, or defined in config) require confirmation before deletion. Shift-click deletes items instantly. The plugin uses bStats for anonymous usage statistics.
 
 ---
 
-# QuickTrash — Ausführliche Beschreibung (für Modrinth)
+# QuickTrash — Full Description (for Modrinth)
 
-## Über QuickTrash
+## About QuickTrash
 
-QuickTrash ist ein minimalistisches Paper-Plugin, das eine temporäre Trash-Funktionalität für Minecraft-Server hinzufügt. Es ist ideal für Server, die einen einfachen Weg zum Entsorgen von Gegenständen ohne die Komplexität eines vollständigen Verwaltungssystems benötigen.
+QuickTrash is a minimalist Paper plugin that adds temporary trash functionality to Minecraft servers. It is ideal for servers that need a simple way to dispose of items without the complexity of a full management system.
 
-## Funktionen
+## Features
 
-- **18-Slot Trash-Inventory**: Öffne über `/trash` einen temporären Behälter
-- **Automatische Bereinigung**: Inhalte werden nach einer konfigurierbaren Zeit (Standard: 30 Sekunden) gelöscht
-- **Sofortiges Löschen**: Shift-Klick löscht Gegenstände ohne Bestätigung
-- **Wertgegenstände-Schutz**: Verzauster, benannter Gegenstände und definierte Materialien erfordern eine zweistufige Bestätigung
-- **bStats-Integration**: Anonyme Nutzungsstatistiken mit Plugin-ID 33565
-- **Konfigurierbar**: Timeout, GUI-Texte und wertvolle Materialien anpassbar
+- **18-Slot Trash Inventory**: Open via `/trash` a temporary container
+- **Auto-cleanup**: Contents are deleted after a configurable time (default: 30 seconds)
+- **Instant Delete**: Shift-click deletes items without confirmation
+- **Valuable Item Protection**: Enchanted, named items and configured materials require double-click confirmation
+- **bStats Integration**: Anonymous usage tracking with plugin ID 33565
+- **Configurable**: Timeout, GUI texts, and valuable materials are adjustable
 
 ## Installation
 
-1. Lade die neueste Version herunter
-2. Platziere die JAR-Datei in deinen `plugins/` Ordner
-3. Starte den Server neu
-4. Passe die Konfiguration in `plugins/QuickTrash/config.yml` an
-5. Starte den Server erneut neu
+1. Download the latest release
+2. Place the JAR file in your `plugins/` folder
+3. Restart the server
+4. Adjust configuration in `plugins/QuickTrash/config.yml`
+5. Restart the server again
 
-## Verwendung
+## Usage
 
-### Befehle
+### Commands
 
-| Befehl | Beschreibung | Berechtigung |
-|--------|-------------|--------------|
-| `/trash` | Öffnet das Trash-Inventar | `quicktrash.use` |
-| `/quicktrash version` | Zeigt die Plugin-Version an | — |
-| `/quicktrash reload` | Lädt die Konfiguration neu | `quicktrash.admin` |
+| Command | Description | Permission |
+|--------|-------------|------------|
+| `/trash` | Opens the trash inventory | `quicktrash.use` |
+| `/quicktrash version` | Shows the plugin version | — |
+| `/quicktrash reload` | Reloads the configuration | `quicktrash.admin` |
 
-### Wie es funktioniert
+### How It Works
 
-1. Spieler öffnen `/trash` und erhalten ein 18-Slot großes Inventar
-2. Gegenstände werden in dieses Inventar gelegt (per Drag & Drop)
-3. Nach Ablauf der konfigurierten Zeit oder beim Schließen des Inventars werden die Gegenstände dauerhaft gelöscht
-4. Shift-Klick auf Gegenstände im Inventar löscht sie sofort
-5. Wertvolle Gegenstände zeigen eine Bestätigungsanforderung an
+1. Players open `/trash` and receive an 18-slot inventory
+2. Items are placed into this inventory (via drag & drop)
+3. After the configured time expires or when the inventory is closed, items are permanently deleted
+4. Shift-click on items in the inventory deletes them instantly
+5. Valuable items show a confirmation prompt
 
-## Konfiguration
+## Configuration
 
-Die `config.yml` wird automatisch erstellt und enthält folgende Optionen:
+The `config.yml` file is automatically generated and contains the following options:
 
 ```yaml
 trash:
@@ -57,10 +57,10 @@ gui:
   title: "&8QuickTrash"
   info-name: "QuickTrash"
   info-lore:
-    - "&7Rechtsklick zum Speichern"
-    - "&7Shift-Klick zum sofortigen Löschen"
-    - "&7Wertvolle Gegenstände benötigen Bestätigung"
-    - "&7Zeit bis zur Automatik-Löschung: {seconds}s"
+    - "&7Right-click to store items"
+    - "&7Shift-click to delete instantly"
+    - "&7Valuable items require confirmation"
+    - "&7Time until auto-clear: {seconds}s"
 
 valuable-items:
   materials:
@@ -73,16 +73,16 @@ valuable-items:
   confirmation-window: 3
 ```
 
-## Voraussetzungen
+## Requirements
 
-- **PaperMC** 26.2 oder kompatibler Fork (Purpur, etc.)
+- **PaperMC** 26.2 or compatible fork (Purpur, etc.)
 - **Java** 25
-- Keine zusätzlichen Dependencies erforderlich
+- No additional dependencies required
 
-## Lizenz
+## License
 
-Dieses Plugin steht unter der MIT-Lizenz. Siehe `LICENCE` für Details.
+This plugin is licensed under the MIT License. See `LICENCE` for details.
 
 ## bStats
 
-QuickTrash sendet anonyme Statistiken an [bStats](https://bstats.org). Du kannst dies in der Datei `plugins/bStats/config.yml` deaktivieren.
+QuickTrash sends anonymous statistics to [bStats](https://bstats.org). You can disable this in `plugins/bStats/config.yml`.
