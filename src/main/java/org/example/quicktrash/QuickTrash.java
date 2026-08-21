@@ -7,6 +7,7 @@ import org.example.quicktrash.manager.TrashManager;
 import org.example.quicktrash.manager.ValuableItemChecker;
 import org.example.quicktrash.util.MessageService;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bstats.bukkit.Metrics;
 
 /** Main entry point for the QuickTrash Paper plugin. */
 public final class QuickTrash extends JavaPlugin {
@@ -25,6 +26,9 @@ public final class QuickTrash extends JavaPlugin {
         QuickTrashCommand admin = new QuickTrashCommand(this);
         getCommand("quicktrash").setExecutor(admin);
         getCommand("quicktrash").setTabCompleter(admin);
+        // bStats
+        int pluginId = 33565;
+        new Metrics(this, pluginId);
         getLogger().info("QuickTrash enabled.");
     }
 

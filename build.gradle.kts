@@ -16,6 +16,7 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.2.build.112-stable")
+    implementation("org.bstats:bstats-bukkit:3.2.1")
 }
 
 java {
@@ -39,4 +40,11 @@ spotbugs {
     reportLevel = com.github.spotbugs.snom.Confidence.valueOf("LOW")
     reportsDir = file("build/reports/spotbugs")
     includeFilter = file("config/spotbugs/spotbugs.xml")
+}
+
+shadowJar {
+    archiveBaseName.set("QuickTrash")
+    archiveVersion.set(project.version.toString())
+    archiveClassifier.set("")
+    relocate("org.bstats", project.group.toString())
 }
