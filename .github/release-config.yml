@@ -1,0 +1,5 @@
+branches:
+  main:
+    type: stable
+    paper: "26.2"
+    java: "25"

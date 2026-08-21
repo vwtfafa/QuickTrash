@@ -6,8 +6,6 @@ import java.util.UUID;
 import org.example.quicktrash.QuickTrash;
 import org.example.quicktrash.gui.TrashHolder;
 import org.example.quicktrash.manager.TrashManager;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
