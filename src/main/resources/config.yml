@@ -1,0 +1,31 @@
+trash:
+  auto-clear-seconds: 30
+valuable-items:
+  enabled: true
+  require-confirmation: true
+  confirmation-timeout-seconds: 5
+  materials:
+    - DIAMOND
+    - EMERALD
+    - NETHERITE_INGOT
+    - NETHERITE_SWORD
+    - NETHERITE_PICKAXE
+    - ENCHANTED_GOLDEN_APPLE
+messages:
+  prefix: '&8[&bQuickTrash&8] '
+  trash-opened: '&7Trash opened.'
+  trash-cleared: '&aYour trash was cleared.'
+  item-deleted: '&c{amount}x {item} deleted.'
+  valuable-warning: '&c! This item is valuable!'
+  confirmation-required: '&7Click again to permanently delete it.'
+  no-permission: '&cYou do not have permission.'
+  no-space: '&cYour trash is full.'
+  reload: '&aConfiguration reloaded.'
+  version: '&7QuickTrash &f{version}'
+  player-only: '&cOnly players can use this command.'
+gui:
+  title: '&8QuickTrash'
+  info-name: '&bQuickTrash'
+  info-lore:
+    - '&7Items are deleted after &f{seconds}s&7.'
+    - '&7Shift-click an item to delete it now.'

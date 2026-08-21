@@ -1,0 +1,25 @@
+name: QuickTrash
+version: '${version}'
+main: org.example.quicktrash.QuickTrash
+api-version: '26.2'
+author: QuickTrash
+description: A fast, safe player trash inventory.
+commands:
+  trash:
+    description: Opens your QuickTrash inventory.
+    usage: /trash
+    permission: quicktrash.use
+  quicktrash:
+    description: QuickTrash administration commands.
+    usage: /quicktrash <reload|version>
+    permission: quicktrash.use
+permissions:
+  quicktrash.use:
+    description: Allows use of /trash.
+    default: true
+  quicktrash.admin:
+    description: Allows QuickTrash administration commands.
+    default: op
+  quicktrash.bypass:
+    description: Bypasses valuable item confirmations.
+    default: op
