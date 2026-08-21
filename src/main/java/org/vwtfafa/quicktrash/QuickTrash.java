@@ -1,11 +1,11 @@
-package org.example.quicktrash;
+package org.vwtfafa.quicktrash;
 
-import org.example.quicktrash.command.QuickTrashCommand;
-import org.example.quicktrash.command.TrashCommand;
-import org.example.quicktrash.listener.TrashListener;
-import org.example.quicktrash.manager.TrashManager;
-import org.example.quicktrash.manager.ValuableItemChecker;
-import org.example.quicktrash.util.MessageService;
+import org.vwtfafa.quicktrash.command.QuickTrashCommand;
+import org.vwtfafa.quicktrash.command.TrashCommand;
+import org.vwtfafa.quicktrash.listener.TrashListener;
+import org.vwtfafa.quicktrash.manager.TrashManager;
+import org.vwtfafa.quicktrash.manager.ValuableItemChecker;
+import org.vwtfafa.quicktrash.util.MessageService;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bstats.bukkit.Metrics;
 

@@ -1,4 +1,4 @@
-package org.example.quicktrash.model;
+package org.vwtfafa.quicktrash.model;
 
 import java.util.UUID;
 import org.bukkit.inventory.ItemStack;

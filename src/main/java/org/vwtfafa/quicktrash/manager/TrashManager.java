@@ -1,13 +1,13 @@
-package org.example.quicktrash.manager;
+package org.vwtfafa.quicktrash.manager;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import org.example.quicktrash.QuickTrash;
-import org.example.quicktrash.gui.TrashHolder;
-import org.example.quicktrash.model.TrashSession;
+import org.vwtfafa.quicktrash.QuickTrash;
+import org.vwtfafa.quicktrash.gui.TrashHolder;
+import org.vwtfafa.quicktrash.model.TrashSession;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;

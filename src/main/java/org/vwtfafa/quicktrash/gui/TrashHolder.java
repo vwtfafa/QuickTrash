@@ -1,4 +1,4 @@
-package org.example.quicktrash.gui;
+package org.vwtfafa.quicktrash.gui;
 
 import java.util.UUID;
 import org.bukkit.inventory.Inventory;

@@ -1,4 +1,4 @@
-package org.example.quicktrash.manager;
+package org.vwtfafa.quicktrash.manager;
 
 import java.util.List;
 import java.util.Locale;

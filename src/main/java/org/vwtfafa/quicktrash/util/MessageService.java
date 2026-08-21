@@ -1,4 +1,4 @@
-package org.example.quicktrash.util;
+package org.vwtfafa.quicktrash.util;
 
 import java.util.Map;
 import net.kyori.adventure.text.Component;

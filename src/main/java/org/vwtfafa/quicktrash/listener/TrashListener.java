@@ -1,11 +1,11 @@
-package org.example.quicktrash.listener;
+package org.vwtfafa.quicktrash.listener;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import org.example.quicktrash.QuickTrash;
-import org.example.quicktrash.gui.TrashHolder;
-import org.example.quicktrash.manager.TrashManager;
+import org.vwtfafa.quicktrash.QuickTrash;
+import org.vwtfafa.quicktrash.gui.TrashHolder;
+import org.vwtfafa.quicktrash.manager.TrashManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

@@ -1,7 +1,7 @@
-package org.example.quicktrash.command;
+package org.vwtfafa.quicktrash.command;
 
 import java.util.List;
-import org.example.quicktrash.QuickTrash;
+import org.vwtfafa.quicktrash.QuickTrash;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
