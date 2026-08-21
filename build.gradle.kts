@@ -41,7 +41,15 @@ tasks.processResources {
 }
 
 tasks.shadowJar {
+    archiveBaseName.set("QuickTrash")
+    archiveVersion.set(project.version.toString())
     archiveClassifier.set("")
+
+    dependencies {
+        exclude { it.moduleGroup != "org.bstats" }
+    }
+
+    relocate("org.bstats", project.group.toString())
 }
 
 tasks.build {
