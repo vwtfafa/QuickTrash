@@ -1,6 +1,7 @@
 plugins {
     java
     checkstyle
+    id("com.github.spotbugs") version "6.5.10"
 }
 
 group = "org.example"
@@ -29,4 +30,13 @@ tasks.withType<JavaCompile>().configureEach {
 checkstyle {
     toolVersion = "10.26.0"
     configDirectory = file("config/checkstyle")
+}
+
+spotbugs {
+    toolVersion = "4.10.3"
+    ignoreFailures = false
+    effort = com.github.spotbugs.snom.Effort.valueOf("MAX")
+    reportLevel = com.github.spotbugs.snom.Confidence.valueOf("LOW")
+    reportsDir = file("build/reports/spotbugs")
+    includeFilter = file("config/spotbugs/spotbugs.xml")
 }
