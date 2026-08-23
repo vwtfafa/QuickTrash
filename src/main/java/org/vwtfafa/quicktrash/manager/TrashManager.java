@@ -59,25 +59,29 @@ public final class TrashManager {
         Inventory inventory = Bukkit.createInventory(holder, 27, title());
         holder.inventory(inventory);
         for (int slot = 0; slot < 18; slot++) inventory.setItem(slot, session.items()[slot]);
-        decorate(inventory);
+        decorate(inventory, clearSeconds());
         player.openInventory(inventory);
         ensureTimer();
         plugin.messages().send(player, "trash-opened");
     }
 
-    private void decorate(Inventory inventory) {
+    private void decorate(Inventory inventory, long seconds) {
         ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = filler.getItemMeta();
         fillerMeta.customName(Component.empty());
         filler.setItemMeta(fillerMeta);
         for (int slot = 18; slot < 27; slot++) inventory.setItem(slot, filler);
+        inventory.setItem(22, infoItem(seconds));
+    }
+
+    private ItemStack infoItem(long seconds) {
         ItemStack info = new ItemStack(Material.PAPER);
         ItemMeta meta = info.getItemMeta();
         meta.customName(plugin.messages().component(plugin.getConfig().getString("gui.info-name", "QuickTrash")));
         meta.lore(plugin.getConfig().getStringList("gui.info-lore").stream()
-            .map(line -> plugin.messages().component(line, java.util.Map.of("seconds", String.valueOf(clearSeconds())))).toList());
+            .map(line -> plugin.messages().component(line, java.util.Map.of("seconds", String.valueOf(seconds)))).toList());
         info.setItemMeta(meta);
-        inventory.setItem(22, info);
+        return info;
     }
 
     public void snapshot(Player player, Inventory inventory) {
@@ -129,16 +133,24 @@ public final class TrashManager {
         long now = System.currentTimeMillis();
         boolean changed = false;
         for (TrashSession session : java.util.List.copyOf(sessions.values())) {
-            if (session.expiresAt() > now) continue;
             UUID id = session.playerId();
-            Player player = Bukkit.getPlayer(id);
-            if (player != null && player.getOpenInventory().getTopInventory().getHolder() instanceof TrashHolder holder
-                && holder.playerId().equals(id)) {
-                player.closeInventory();
-                plugin.messages().send(player, "trash-cleared");
+            if (session.expiresAt() <= now) {
+                Player player = Bukkit.getPlayer(id);
+                if (player != null && player.getOpenInventory().getTopInventory().getHolder() instanceof TrashHolder holder
+                    && holder.playerId().equals(id)) {
+                    player.closeInventory();
+                    plugin.messages().send(player, "trash-cleared");
+                }
+                sessions.remove(id);
+                changed = true;
+                continue;
             }
-            sessions.remove(id);
-            changed = true;
+            Player viewer = Bukkit.getPlayer(id);
+            if (viewer != null && viewer.getOpenInventory().getTopInventory().getHolder() instanceof TrashHolder holder
+                && holder.playerId().equals(id)) {
+                long seconds = Math.max(0, (session.expiresAt() - now + 999) / 1000);
+                viewer.getOpenInventory().getTopInventory().setItem(22, infoItem(seconds));
+            }
         }
         if (sessions.isEmpty() && task != null) {
             task.cancel();
