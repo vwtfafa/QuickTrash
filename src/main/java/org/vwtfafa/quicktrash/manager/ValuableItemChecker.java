@@ -4,13 +4,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 public final class ValuableItemChecker {
     private final TrashManager manager;
-    private volatile MaterialRule cachedRule;
+    private final AtomicReference<MaterialRule> cachedRule = new AtomicReference<>();
 
     public ValuableItemChecker(TrashManager manager) { this.manager = manager; }
 
@@ -26,10 +27,10 @@ public final class ValuableItemChecker {
             || item.getType() == Material.ENCHANTED_GOLDEN_APPLE;
     }
 
-    public void invalidate() { cachedRule = null; }
+    public void invalidate() { cachedRule.set(null); }
 
     private MaterialRule cachedRule() {
-        MaterialRule cached = cachedRule;
+        MaterialRule cached = cachedRule.get();
         if (cached != null) return cached;
         List<String> configured = manager.plugin().getConfig().getStringList("valuable-items.materials");
         Set<Material> materials = configured.stream()
@@ -38,8 +39,15 @@ public final class ValuableItemChecker {
             .collect(Collectors.toUnmodifiableSet());
         String mode = manager.plugin().getConfig().getString("valuable-items.mode", "WHITELIST");
         boolean blacklist = "BLACKLIST".equalsIgnoreCase(mode);
-        cachedRule = new MaterialRule(materials, blacklist);
-        return cachedRule;
+        if (blacklist && materials.isEmpty()) {
+            manager.plugin().getLogger().warning(
+                "valuable-items.mode is BLACKLIST but valuable-items.materials is empty; every item would require confirmation. Treating as disabled.");
+            materials = Set.of(Material.AIR);
+            blacklist = false;
+        }
+        MaterialRule rule = new MaterialRule(materials, blacklist);
+        cachedRule.compareAndSet(null, rule);
+        return rule;
     }
 
     private Material parseMaterial(String value) {
