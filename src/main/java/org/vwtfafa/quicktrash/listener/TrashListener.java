@@ -119,6 +119,9 @@ public final class TrashListener implements Listener {
     @EventHandler
     public void onDrag(InventoryDragEvent event) {
         if (!(event.getView().getTopInventory().getHolder() instanceof TrashHolder)) return;
+        int topSize = event.getView().getTopInventory().getSize();
+        boolean touchesTrash = event.getRawSlots().stream().anyMatch(slot -> slot < topSize);
+        if (!touchesTrash) return;
         event.setCancelled(true);
     }
 
