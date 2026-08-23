@@ -22,6 +22,7 @@ import net.kyori.adventure.text.Component;
 public final class TrashManager {
     private final QuickTrash plugin;
     private final Map<UUID, TrashSession> sessions = new HashMap<>();
+    private final Map<UUID, Long> lastInfoSeconds = new HashMap<>();
     private final Object ioLock = new Object();
     private volatile boolean dirty;
     private File dataFile;
@@ -144,6 +145,7 @@ public final class TrashManager {
                 }
                 plugin.stats().add(id, session.itemCount());
                 sessions.remove(id);
+                lastInfoSeconds.remove(id);
                 changed = true;
                 continue;
             }
@@ -151,7 +153,11 @@ public final class TrashManager {
             if (viewer != null && viewer.getOpenInventory().getTopInventory().getHolder() instanceof TrashHolder holder
                 && holder.playerId().equals(id)) {
                 long seconds = Math.max(0, (session.expiresAt() - now + 999) / 1000);
-                viewer.getOpenInventory().getTopInventory().setItem(TrashHolder.INFO_SLOT, infoItem(seconds));
+                Long previous = lastInfoSeconds.get(id);
+                if (previous == null || previous != seconds) {
+                    lastInfoSeconds.put(id, seconds);
+                    viewer.getOpenInventory().getTopInventory().setItem(TrashHolder.INFO_SLOT, infoItem(seconds));
+                }
             }
         }
         if (sessions.isEmpty() && task != null) {
