@@ -16,6 +16,15 @@ public final class TrashSession {
     public UUID playerId() { return playerId; }
     public ItemStack[] items() { return items; }
     public long expiresAt() { return expiresAt; }
+
+    public int itemCount() {
+        int count = 0;
+        for (ItemStack item : items) {
+            if (item != null && !item.getType().isAir()) count += item.getAmount();
+        }
+        return count;
+    }
+
     public void refresh(long expiresAt) { this.expiresAt = expiresAt; }
     public void clear() { java.util.Arrays.fill(items, null); }
 }

@@ -57,6 +57,7 @@ public final class TrashListener implements Listener {
         if (item == null || item.getType().isAir()) return;
         if (requiresConfirmation(player, slot, item)) return;
         top.setItem(slot, null);
+        plugin.stats().add(player.getUniqueId(), item.getAmount());
         sendDeleted(player, item);
         org.vwtfafa.quicktrash.util.Sounds.play(plugin, player, "gui.sounds.delete");
     }

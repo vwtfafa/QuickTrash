@@ -5,6 +5,7 @@ import java.util.List;
 import org.vwtfafa.quicktrash.command.QuickTrashCommand;
 import org.vwtfafa.quicktrash.command.TrashCommand;
 import org.vwtfafa.quicktrash.listener.TrashListener;
+import org.vwtfafa.quicktrash.manager.StatsManager;
 import org.vwtfafa.quicktrash.manager.TrashManager;
 import org.vwtfafa.quicktrash.manager.ValuableItemChecker;
 import org.vwtfafa.quicktrash.util.MessageService;
@@ -15,6 +16,7 @@ import org.bstats.bukkit.Metrics;
 public final class QuickTrash extends JavaPlugin {
     private TrashManager trash;
     private ValuableItemChecker valuableItems;
+    private StatsManager stats;
     private MessageService messages;
 
     @Override public void onEnable() {
@@ -22,7 +24,9 @@ public final class QuickTrash extends JavaPlugin {
         messages = new MessageService(this);
         trash = new TrashManager(this);
         valuableItems = new ValuableItemChecker(trash);
+        stats = new StatsManager(this);
         trash.load();
+        stats.load();
         getServer().getPluginManager().registerEvents(new TrashListener(this), this);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             event.registrar().register("trash", "Opens your QuickTrash inventory.", List.of(), new TrashCommand(this));
@@ -34,8 +38,12 @@ public final class QuickTrash extends JavaPlugin {
         getLogger().info("QuickTrash enabled.");
     }
 
-    @Override public void onDisable() { if (trash != null) trash.shutdown(); }
+    @Override public void onDisable() {
+        if (trash != null) trash.shutdown();
+        if (stats != null) stats.shutdown();
+    }
     public TrashManager trash() { return trash; }
     public ValuableItemChecker valuableItems() { return valuableItems; }
+    public StatsManager stats() { return stats; }
     public MessageService messages() { return messages; }
 }

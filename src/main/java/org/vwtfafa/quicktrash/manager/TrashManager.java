@@ -142,6 +142,7 @@ public final class TrashManager {
                     player.closeInventory();
                     plugin.messages().send(player, "trash-cleared");
                 }
+                plugin.stats().add(id, session.itemCount());
                 sessions.remove(id);
                 changed = true;
                 continue;
@@ -158,6 +159,7 @@ public final class TrashManager {
             task = null;
         }
         if (changed || dirty) flushAsync();
+        plugin.stats().flushIfDirty();
     }
 
     private void markDirty() { dirty = true; }
