@@ -40,7 +40,7 @@ public final class TrashManager {
                 UUID id = UUID.fromString(key);
                 TrashSession session = new TrashSession(id, root.getLong(key + ".expires-at"));
                 var list = root.getList(key + ".items", java.util.List.of());
-                for (int slot = 0; slot < Math.min(18, list.size()); slot++) {
+                for (int slot = 0; slot < Math.min(TrashSession.SIZE, list.size()); slot++) {
                     if (list.get(slot) instanceof ItemStack item) session.setItem(slot, item);
                 }
                 if (session.expiresAt() > System.currentTimeMillis()) sessions.put(id, session);
@@ -56,7 +56,7 @@ public final class TrashManager {
         session.refresh(expiryFromNow());
         markDirty();
         TrashHolder holder = new TrashHolder(player.getUniqueId());
-        Inventory inventory = Bukkit.createInventory(holder, 27, title());
+        Inventory inventory = Bukkit.createInventory(holder, TrashHolder.INVENTORY_SIZE, title());
         holder.inventory(inventory);
         for (int slot = 0; slot < TrashSession.SIZE; slot++) inventory.setItem(slot, session.itemAt(slot));
         decorate(inventory, clearSeconds());
@@ -71,8 +71,8 @@ public final class TrashManager {
         ItemMeta fillerMeta = filler.getItemMeta();
         fillerMeta.customName(Component.empty());
         filler.setItemMeta(fillerMeta);
-        for (int slot = 18; slot < 27; slot++) inventory.setItem(slot, filler);
-        inventory.setItem(22, infoItem(seconds));
+        for (int slot = TrashSession.SIZE; slot < TrashHolder.INVENTORY_SIZE; slot++) inventory.setItem(slot, filler);
+        inventory.setItem(TrashHolder.INFO_SLOT, infoItem(seconds));
     }
 
     private ItemStack infoItem(long seconds) {
@@ -96,7 +96,7 @@ public final class TrashManager {
         if (item == null || item.getType().isAir() || !sessions.containsKey(player.getUniqueId())) return -1;
         int remaining = item.getAmount();
         int maxStack = item.getMaxStackSize();
-        for (int slot = 0; slot < 18 && remaining > 0; slot++) {
+        for (int slot = 0; slot < TrashSession.SIZE && remaining > 0; slot++) {
             ItemStack existing = top.getItem(slot);
             if (existing == null || existing.getType().isAir() || !existing.isSimilar(item)) continue;
             int space = maxStack - existing.getAmount();
@@ -105,7 +105,7 @@ public final class TrashManager {
             existing.setAmount(existing.getAmount() + transfer);
             remaining -= transfer;
         }
-        for (int slot = 0; slot < 18 && remaining > 0; slot++) {
+        for (int slot = 0; slot < TrashSession.SIZE && remaining > 0; slot++) {
             ItemStack existing = top.getItem(slot);
             if (existing != null && !existing.getType().isAir()) continue;
             int transfer = Math.min(maxStack, remaining);
@@ -151,7 +151,7 @@ public final class TrashManager {
             if (viewer != null && viewer.getOpenInventory().getTopInventory().getHolder() instanceof TrashHolder holder
                 && holder.playerId().equals(id)) {
                 long seconds = Math.max(0, (session.expiresAt() - now + 999) / 1000);
-                viewer.getOpenInventory().getTopInventory().setItem(22, infoItem(seconds));
+                viewer.getOpenInventory().getTopInventory().setItem(TrashHolder.INFO_SLOT, infoItem(seconds));
             }
         }
         if (sessions.isEmpty() && task != null) {

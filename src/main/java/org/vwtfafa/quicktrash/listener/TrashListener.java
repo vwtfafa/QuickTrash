@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.vwtfafa.quicktrash.QuickTrash;
 import org.vwtfafa.quicktrash.gui.TrashHolder;
 import org.vwtfafa.quicktrash.manager.TrashManager;
+import org.vwtfafa.quicktrash.model.TrashSession;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -42,10 +43,10 @@ public final class TrashListener implements Listener {
             return;
         }
         if (event.getClickedInventory() == top) {
-            if (event.getSlot() >= 18 || event.getClick().isShiftClick()) {
+            if (event.getSlot() >= TrashSession.SIZE || event.getClick().isShiftClick()) {
                 event.setCancelled(true);
             }
-            if (event.getSlot() < 18 && event.getClick().isShiftClick()) deleteFromTrash(player, top, event.getSlot(), event.getCurrentItem());
+            if (event.getSlot() < TrashSession.SIZE && event.getClick().isShiftClick()) deleteFromTrash(player, top, event.getSlot(), event.getCurrentItem());
             return;
         }
         if (event.getClickedInventory() == event.getView().getBottomInventory() && event.getClick().isShiftClick()) {
