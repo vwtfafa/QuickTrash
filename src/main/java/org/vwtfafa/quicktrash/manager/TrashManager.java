@@ -22,6 +22,8 @@ import net.kyori.adventure.text.Component;
 public final class TrashManager {
     private final QuickTrash plugin;
     private final Map<UUID, TrashSession> sessions = new HashMap<>();
+    private final Object ioLock = new Object();
+    private volatile boolean dirty;
     private File dataFile;
     private BukkitTask task;
 
@@ -52,6 +54,7 @@ public final class TrashManager {
     public void open(Player player) {
         TrashSession session = sessions.computeIfAbsent(player.getUniqueId(), id -> new TrashSession(id, expiryFromNow()));
         session.refresh(expiryFromNow());
+        markDirty();
         TrashHolder holder = new TrashHolder(player.getUniqueId());
         Inventory inventory = Bukkit.createInventory(holder, 27, title());
         holder.inventory(inventory);
@@ -81,7 +84,7 @@ public final class TrashManager {
         TrashSession session = sessions.get(player.getUniqueId());
         if (session == null) return;
         for (int slot = 0; slot < 18; slot++) session.items()[slot] = inventory.getItem(slot);
-        save();
+        markDirty();
     }
 
     public int put(Player player, ItemStack item) {
@@ -97,7 +100,7 @@ public final class TrashManager {
     }
 
     public TrashSession session(UUID id) { return sessions.get(id); }
-    public void remove(UUID id) { sessions.remove(id); save(); }
+    public void remove(UUID id) { sessions.remove(id); markDirty(); }
     public int clearSeconds() { return Math.max(1, plugin.getConfig().getInt("trash.auto-clear-seconds", 30)); }
     private long expiryFromNow() { return System.currentTimeMillis() + clearSeconds() * 1000L; }
     private Component title() { return plugin.messages().component(plugin.getConfig().getString("gui.title", "&8QuickTrash")); }
@@ -109,6 +112,7 @@ public final class TrashManager {
 
     private void tick() {
         long now = System.currentTimeMillis();
+        boolean changed = false;
         for (TrashSession session : java.util.List.copyOf(sessions.values())) {
             if (session.expiresAt() > now) continue;
             UUID id = session.playerId();
@@ -119,24 +123,39 @@ public final class TrashManager {
                 plugin.messages().send(player, "trash-cleared");
             }
             sessions.remove(id);
+            changed = true;
         }
         if (sessions.isEmpty() && task != null) {
             task.cancel();
             task = null;
         }
-        save();
+        if (changed || dirty) flushAsync();
     }
 
-    public void save() {
-        if (dataFile == null) return;
+    private void markDirty() { dirty = true; }
+
+    private void flushAsync() {
+        dirty = false;
+        YamlConfiguration config = snapshotConfig();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> writeFile(config));
+    }
+
+    private YamlConfiguration snapshotConfig() {
         YamlConfiguration config = new YamlConfiguration();
         for (TrashSession session : sessions.values()) {
             String path = "sessions." + session.playerId();
             config.set(path + ".expires-at", session.expiresAt());
             config.set(path + ".items", java.util.Arrays.asList(session.items()));
         }
-        try { config.save(dataFile); }
-        catch (IOException exception) { plugin.getLogger().log(java.util.logging.Level.SEVERE, "Could not save trash data", exception); }
+        return config;
+    }
+
+    private void writeFile(YamlConfiguration config) {
+        if (dataFile == null) return;
+        synchronized (ioLock) {
+            try { config.save(dataFile); }
+            catch (IOException exception) { plugin.getLogger().log(java.util.logging.Level.SEVERE, "Could not save trash data", exception); }
+        }
     }
 
     public void shutdown() {
@@ -147,6 +166,6 @@ public final class TrashManager {
         }
         if (task != null) task.cancel();
         task = null;
-        save();
+        writeFile(snapshotConfig());
     }
 }
