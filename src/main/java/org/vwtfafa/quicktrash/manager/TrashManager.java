@@ -41,7 +41,7 @@ public final class TrashManager {
                 TrashSession session = new TrashSession(id, root.getLong(key + ".expires-at"));
                 var list = root.getList(key + ".items", java.util.List.of());
                 for (int slot = 0; slot < Math.min(18, list.size()); slot++) {
-                    if (list.get(slot) instanceof ItemStack item) session.items()[slot] = item;
+                    if (list.get(slot) instanceof ItemStack item) session.setItem(slot, item);
                 }
                 if (session.expiresAt() > System.currentTimeMillis()) sessions.put(id, session);
             } catch (IllegalArgumentException ignored) {
@@ -58,7 +58,7 @@ public final class TrashManager {
         TrashHolder holder = new TrashHolder(player.getUniqueId());
         Inventory inventory = Bukkit.createInventory(holder, 27, title());
         holder.inventory(inventory);
-        for (int slot = 0; slot < 18; slot++) inventory.setItem(slot, session.items()[slot]);
+        for (int slot = 0; slot < TrashSession.SIZE; slot++) inventory.setItem(slot, session.itemAt(slot));
         decorate(inventory, clearSeconds());
         player.openInventory(inventory);
         ensureTimer();
@@ -88,7 +88,7 @@ public final class TrashManager {
     public void snapshot(Player player, Inventory inventory) {
         TrashSession session = sessions.get(player.getUniqueId());
         if (session == null) return;
-        for (int slot = 0; slot < 18; slot++) session.items()[slot] = inventory.getItem(slot);
+        for (int slot = 0; slot < TrashSession.SIZE; slot++) session.setItem(slot, inventory.getItem(slot));
         markDirty();
     }
 
@@ -174,7 +174,7 @@ public final class TrashManager {
         for (TrashSession session : sessions.values()) {
             String path = "sessions." + session.playerId();
             config.set(path + ".expires-at", session.expiresAt());
-            config.set(path + ".items", java.util.Arrays.asList(session.items()));
+            config.set(path + ".items", java.util.Arrays.asList(session.copyItems()));
         }
         return config;
     }

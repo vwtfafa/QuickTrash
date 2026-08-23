@@ -19,15 +19,15 @@ class TrashSessionTest {
 
     @Test
     void itemCountCountsOnlyRealItems() {
-        session.items()[0] = stack(32, false);
-        session.items()[1] = stack(1, true);
-        session.items()[5] = stack(8, false);
+        session.setItem(0, stack(32, false));
+        session.setItem(1, stack(1, true));
+        session.setItem(5, stack(8, false));
         assertEquals(40, session.itemCount());
     }
 
     @Test
     void clearRemovesAllItems() {
-        session.items()[0] = stack(64, false);
+        session.setItem(0, stack(64, false));
         session.clear();
         assertEquals(0, session.itemCount());
     }
