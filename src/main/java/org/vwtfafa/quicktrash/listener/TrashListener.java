@@ -65,13 +65,18 @@ public final class TrashListener implements Listener {
         if (item == null || item.getType().isAir()) return;
         int sourceSlot = event.getSlot();
         if (requiresConfirmation(player, sourceSlot, item)) return;
-        int targetSlot = manager.put(player, item);
-        if (targetSlot == -1) {
+        ItemStack deposit = item.clone();
+        int leftover = manager.put(player, event.getView().getTopInventory(), deposit);
+        if (leftover == -1) {
             plugin.messages().send(player, "no-space");
             return;
         }
-        event.getClickedInventory().setItem(sourceSlot, null);
-        event.getView().getTopInventory().setItem(targetSlot, item.clone());
+        if (leftover == 0) {
+            event.getClickedInventory().setItem(sourceSlot, null);
+        } else {
+            deposit.setAmount(leftover);
+            event.getClickedInventory().setItem(sourceSlot, deposit);
+        }
     }
 
     private boolean requiresConfirmation(Player player, int slot, ItemStack item) {

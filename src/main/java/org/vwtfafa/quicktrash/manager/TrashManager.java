@@ -87,16 +87,31 @@ public final class TrashManager {
         markDirty();
     }
 
-    public int put(Player player, ItemStack item) {
-        TrashSession session = sessions.get(player.getUniqueId());
-        if (session == null) return -1;
-        for (int slot = 0; slot < 18; slot++) {
-            if (session.items()[slot] == null || session.items()[slot].getType().isAir()) {
-                session.items()[slot] = item.clone();
-                return slot;
-            }
+    public int put(Player player, Inventory top, ItemStack item) {
+        if (item == null || item.getType().isAir() || !sessions.containsKey(player.getUniqueId())) return -1;
+        int remaining = item.getAmount();
+        int maxStack = item.getMaxStackSize();
+        for (int slot = 0; slot < 18 && remaining > 0; slot++) {
+            ItemStack existing = top.getItem(slot);
+            if (existing == null || existing.getType().isAir() || !existing.isSimilar(item)) continue;
+            int space = maxStack - existing.getAmount();
+            if (space <= 0) continue;
+            int transfer = Math.min(space, remaining);
+            existing.setAmount(existing.getAmount() + transfer);
+            remaining -= transfer;
         }
-        return -1;
+        for (int slot = 0; slot < 18 && remaining > 0; slot++) {
+            ItemStack existing = top.getItem(slot);
+            if (existing != null && !existing.getType().isAir()) continue;
+            int transfer = Math.min(maxStack, remaining);
+            ItemStack stack = item.clone();
+            stack.setAmount(transfer);
+            top.setItem(slot, stack);
+            remaining -= transfer;
+        }
+        if (remaining == item.getAmount()) return -1;
+        snapshot(player, top);
+        return remaining;
     }
 
     public TrashSession session(UUID id) { return sessions.get(id); }
