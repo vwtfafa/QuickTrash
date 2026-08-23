@@ -1,5 +1,7 @@
 package org.vwtfafa.quicktrash;
 
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import java.util.List;
 import org.vwtfafa.quicktrash.command.QuickTrashCommand;
 import org.vwtfafa.quicktrash.command.TrashCommand;
 import org.vwtfafa.quicktrash.listener.TrashListener;
@@ -22,10 +24,10 @@ public final class QuickTrash extends JavaPlugin {
         valuableItems = new ValuableItemChecker(trash);
         trash.load();
         getServer().getPluginManager().registerEvents(new TrashListener(this), this);
-        getCommand("trash").setExecutor(new TrashCommand(this));
-        QuickTrashCommand admin = new QuickTrashCommand(this);
-        getCommand("quicktrash").setExecutor(admin);
-        getCommand("quicktrash").setTabCompleter(admin);
+        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+            event.registrar().register("trash", "Opens your QuickTrash inventory.", List.of(), new TrashCommand(this));
+            event.registrar().register("quicktrash", "QuickTrash administration commands.", List.of(), new QuickTrashCommand(this));
+        });
         // bStats
         int pluginId = 33565;
         new Metrics(this, pluginId);

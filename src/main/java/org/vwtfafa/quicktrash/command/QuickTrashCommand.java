@@ -1,33 +1,38 @@
 package org.vwtfafa.quicktrash.command;
 
+import io.papermc.paper.command.brigadier.BasicCommand;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 import java.util.List;
 import org.vwtfafa.quicktrash.QuickTrash;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
 
-public final class QuickTrashCommand implements CommandExecutor, TabCompleter {
+public final class QuickTrashCommand implements BasicCommand {
+    private static final List<String> SUB_COMMANDS = List.of("reload", "version");
     private final QuickTrash plugin;
     public QuickTrashCommand(QuickTrash plugin) { this.plugin = plugin; }
 
-    @Override public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    @Override public void execute(CommandSourceStack source, String[] args) {
         if (args.length == 0 || args[0].equalsIgnoreCase("version")) {
-            plugin.messages().send(sender, "version", java.util.Map.of("version", plugin.getPluginMeta().getVersion()));
-            return true;
+            plugin.messages().send(source.getSender(), "version", java.util.Map.of("version", plugin.getPluginMeta().getVersion()));
+            return;
         }
         if (args[0].equalsIgnoreCase("reload")) {
-            if (!sender.hasPermission("quicktrash.admin")) { plugin.messages().send(sender, "no-permission"); return true; }
+            if (!source.getSender().hasPermission("quicktrash.admin")) {
+                plugin.messages().send(source.getSender(), "no-permission");
+                return;
+            }
             plugin.reloadConfig();
             plugin.valuableItems().invalidate();
-            plugin.messages().send(sender, "reload");
-            return true;
+            plugin.messages().send(source.getSender(), "reload");
+            return;
         }
-        return false;
     }
 
-    @Override public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (args.length == 1 && sender.hasPermission("quicktrash.admin")) return List.of("reload", "version");
+    @Override public java.util.Collection<String> suggest(CommandSourceStack source, String[] args) {
+        if (args.length == 1 && source.getSender().hasPermission("quicktrash.admin")) {
+            return SUB_COMMANDS.stream().filter(option -> option.startsWith(args[0].toLowerCase())).toList();
+        }
         return List.of();
     }
+
+    @Override public String permission() { return "quicktrash.use"; }
 }
