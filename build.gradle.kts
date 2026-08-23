@@ -16,11 +16,11 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:26.2.build.112-stable")
+    compileOnly("io.papermc.paper:paper-api:26.2.build.116-stable")
 
     implementation("org.bstats:bstats-bukkit:3.2.1")
 
-    testImplementation("io.papermc.paper:paper-api:26.2.build.112-stable")
+    testImplementation("io.papermc.paper:paper-api:26.2.build.116-stable")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testImplementation("org.mockito:mockito-core:5.21.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
