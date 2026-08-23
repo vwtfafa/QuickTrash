@@ -1,5 +1,5 @@
 name: QuickTrash
-version: '1.0.0'
+version: '${version}'
 main: org.vwtfafa.quicktrash.QuickTrash
 api-version: '26.2'
 author: QuickTrash
