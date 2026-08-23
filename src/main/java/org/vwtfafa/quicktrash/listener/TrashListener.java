@@ -36,7 +36,8 @@ public final class TrashListener implements Listener {
         if (!(top.getHolder() instanceof TrashHolder holder)) return;
         if (!(event.getWhoClicked() instanceof Player player) || !holder.playerId().equals(player.getUniqueId())) return;
         if (event.getClick().isKeyboardClick() || event.getClick() == ClickType.DOUBLE_CLICK
-            || event.getClick() == ClickType.SWAP_OFFHAND || event.getClick().isCreativeAction()) {
+            || event.getClick() == ClickType.SWAP_OFFHAND || event.getClick().isCreativeAction()
+            || event.getClick() == ClickType.CONTROL_DROP) {
             event.setCancelled(true);
             return;
         }
@@ -55,7 +56,7 @@ public final class TrashListener implements Listener {
 
     private void deleteFromTrash(Player player, Inventory top, int slot, ItemStack item) {
         if (item == null || item.getType().isAir()) return;
-        if (requiresConfirmation(player, slot, item)) return;
+        if (requiresConfirmation(player, PendingDeletion.TRASH_INVENTORY, slot, item)) return;
         top.setItem(slot, null);
         plugin.stats().add(player.getUniqueId(), item.getAmount());
         sendDeleted(player, item);
@@ -64,35 +65,41 @@ public final class TrashListener implements Listener {
 
     private void moveFromPlayer(Player player, InventoryClickEvent event) {
         ItemStack item = event.getCurrentItem();
-        if (item == null || item.getType().isAir()) return;
+        Inventory bottom = event.getView().getBottomInventory();
+        if (event.getClickedInventory() != bottom || item == null || item.getType().isAir()) return;
         int sourceSlot = event.getSlot();
-        if (requiresConfirmation(player, sourceSlot, item)) return;
+        if (requiresConfirmation(player, PendingDeletion.PLAYER_INVENTORY, sourceSlot, item)) return;
+        int expected = item.getAmount();
         ItemStack deposit = item.clone();
         int leftover = manager.put(player, event.getView().getTopInventory(), deposit);
         if (leftover == -1) {
             plugin.messages().send(player, "no-space");
             return;
         }
+        ItemStack current = bottom.getItem(sourceSlot);
+        if (current == null || current.getAmount() != expected || !current.isSimilar(item)) return;
         if (leftover == 0) {
-            event.getClickedInventory().setItem(sourceSlot, null);
+            bottom.setItem(sourceSlot, null);
         } else {
-            deposit.setAmount(leftover);
-            event.getClickedInventory().setItem(sourceSlot, deposit);
+            ItemStack remainder = item.clone();
+            remainder.setAmount(leftover);
+            bottom.setItem(sourceSlot, remainder);
         }
     }
 
-    private boolean requiresConfirmation(Player player, int slot, ItemStack item) {
+    private boolean requiresConfirmation(Player player, byte inventoryKind, int slot, ItemStack item) {
         if (player.hasPermission("quicktrash.bypass") || !plugin.getConfig().getBoolean("valuable-items.enabled", true)
             || !plugin.getConfig().getBoolean("valuable-items.require-confirmation", true)
             || !plugin.valuableItems().isValuable(item)) return false;
         long now = System.currentTimeMillis();
         PendingDeletion previous = pending.get(player.getUniqueId());
         int timeout = Math.max(1, plugin.getConfig().getInt("valuable-items.confirmation-timeout-seconds", 5));
-        if (previous != null && previous.slot() == slot && previous.item().isSimilar(item) && now - previous.createdAt() <= timeout * 1000L) {
+        if (previous != null && previous.inventory() == inventoryKind && previous.slot() == slot
+            && previous.item().isSimilar(item) && now - previous.createdAt() <= timeout * 1000L) {
             pending.remove(player.getUniqueId());
             return false;
         }
-        pending.put(player.getUniqueId(), new PendingDeletion(slot, item.clone(), now));
+        pending.put(player.getUniqueId(), new PendingDeletion(inventoryKind, slot, item.clone(), now));
         plugin.messages().send(player, "valuable-warning");
         plugin.messages().send(player, "confirmation-required");
         return true;
@@ -138,5 +145,8 @@ public final class TrashListener implements Listener {
         }
     }
 
-    private record PendingDeletion(int slot, ItemStack item, long createdAt) { }
+    private record PendingDeletion(byte inventory, int slot, ItemStack item, long createdAt) {
+        static final byte TRASH_INVENTORY = 0;
+        static final byte PLAYER_INVENTORY = 1;
+    }
 }
