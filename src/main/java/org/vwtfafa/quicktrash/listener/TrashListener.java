@@ -127,7 +127,7 @@ public final class TrashListener implements Listener {
     private void closeAndSnapshot(Player player) {
         if (player.getOpenInventory().getTopInventory().getHolder() instanceof TrashHolder) {
             manager.snapshot(player, player.getOpenInventory().getTopInventory());
-            player.closeInventory();
+            plugin.getServer().getScheduler().runTask(plugin, () -> player.closeInventory());
         }
     }
 
