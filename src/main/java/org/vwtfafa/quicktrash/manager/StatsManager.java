@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.scheduler.BukkitTask;
 import org.vwtfafa.quicktrash.QuickTrash;
 
 public final class StatsManager {
@@ -17,6 +18,7 @@ public final class StatsManager {
     private volatile boolean dirty;
     private long totalDeleted;
     private File dataFile;
+    private BukkitTask flushTask;
 
     public StatsManager(QuickTrash plugin) { this.plugin = plugin; }
 
@@ -48,6 +50,12 @@ public final class StatsManager {
 
     public void flushIfDirty() { if (dirty) flushAsync(); }
 
+    public void startFlushTask() {
+        if (flushTask == null) {
+            flushTask = Bukkit.getScheduler().runTaskTimer(plugin, this::flushIfDirty, 20L, 20L);
+        }
+    }
+
     private void flushAsync() {
         YamlConfiguration config = snapshotConfig();
         dirty = false;
@@ -71,5 +79,11 @@ public final class StatsManager {
         }
     }
 
-    public void shutdown() { writeFile(snapshotConfig()); }
+    public void shutdown() {
+        if (flushTask != null) {
+            flushTask.cancel();
+            flushTask = null;
+        }
+        writeFile(snapshotConfig());
+    }
 }

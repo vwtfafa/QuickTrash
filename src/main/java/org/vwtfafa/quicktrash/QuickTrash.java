@@ -27,6 +27,7 @@ public final class QuickTrash extends JavaPlugin {
         stats = new StatsManager(this);
         trash.load();
         stats.load();
+        stats.startFlushTask();
         getServer().getPluginManager().registerEvents(new TrashListener(this), this);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             event.registrar().register("trash", "Opens your QuickTrash inventory.", List.of(), new TrashCommand(this));

@@ -159,7 +159,6 @@ public final class TrashManager {
             task = null;
         }
         if (changed || dirty) flushAsync();
-        plugin.stats().flushIfDirty();
     }
 
     private void markDirty() { dirty = true; }
