@@ -75,7 +75,7 @@ public final class TrashManager {
         ItemMeta meta = info.getItemMeta();
         meta.customName(plugin.messages().component(plugin.getConfig().getString("gui.info-name", "QuickTrash")));
         meta.lore(plugin.getConfig().getStringList("gui.info-lore").stream()
-            .map(line -> plugin.messages().component(line.replace("{seconds}", String.valueOf(clearSeconds())))).toList());
+            .map(line -> plugin.messages().component(line, java.util.Map.of("seconds", String.valueOf(clearSeconds())))).toList());
         info.setItemMeta(meta);
         inventory.setItem(22, info);
     }
