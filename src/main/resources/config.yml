@@ -25,6 +25,7 @@ messages:
   version: '<gray>QuickTrash <white>{version}'
   stats: '<gray>Your deleted items: <white>{player}<gray>, server total: <white>{total}'
   player-only: '<red>Only players can use this command.'
+  unknown-subcommand: '<red>Unknown subcommand. Available: <white>stats, version, reload'
 gui:
   title: '<dark_gray>QuickTrash'
   info-name: '<aqua>QuickTrash'

@@ -30,7 +30,9 @@ public final class QuickTrashCommand implements BasicCommand {
             plugin.messages().send(sender, "stats", java.util.Map.of(
                 "player", String.valueOf(personal),
                 "total", String.valueOf(plugin.stats().total())));
+            return;
         }
+        plugin.messages().send(source.getSender(), "unknown-subcommand");
     }
 
     @Override public java.util.Collection<String> suggest(CommandSourceStack source, String[] args) {
