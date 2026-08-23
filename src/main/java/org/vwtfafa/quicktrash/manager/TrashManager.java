@@ -51,6 +51,7 @@ public final class TrashManager {
 
     public void open(Player player) {
         TrashSession session = sessions.computeIfAbsent(player.getUniqueId(), id -> new TrashSession(id, expiryFromNow()));
+        session.refresh(expiryFromNow());
         TrashHolder holder = new TrashHolder(player.getUniqueId());
         Inventory inventory = Bukkit.createInventory(holder, 27, title());
         holder.inventory(inventory);
