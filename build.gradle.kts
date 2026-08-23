@@ -59,7 +59,7 @@ tasks.shadowJar {
         exclude { it.moduleGroup != "org.bstats" }
     }
 
-    relocate("org.bstats", project.group.toString())
+    relocate("org.bstats", "${project.group}.shaded.bstats")
 }
 
 tasks.build {
