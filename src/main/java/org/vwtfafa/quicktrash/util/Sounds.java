@@ -1,8 +1,9 @@
 package org.vwtfafa.quicktrash.util;
 
 import java.util.Locale;
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Registry;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -27,7 +28,7 @@ public final class Sounds {
             plugin.getLogger().warning("Invalid sound key in config: " + name);
             return null;
         }
-        Sound sound = Registry.SOUND_EVENT.get(key);
+        Sound sound = RegistryAccess.registryAccess().getRegistry(RegistryKey.SOUND_EVENT).get(key);
         if (sound == null) plugin.getLogger().warning("Unknown sound in config: " + name);
         return sound;
     }
