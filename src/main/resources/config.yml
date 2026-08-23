@@ -26,6 +26,9 @@ messages:
 gui:
   title: '<dark_gray>QuickTrash'
   info-name: '<aqua>QuickTrash'
+  sounds:
+    open: block.ender_chest.open
+    delete: block.lava.extinguish
   info-lore:
     - '<gray>Items are deleted after <white>{seconds}s<gray>.'
     - '<gray>Shift-click an item to delete it now.'

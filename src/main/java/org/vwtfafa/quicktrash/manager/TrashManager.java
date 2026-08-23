@@ -62,6 +62,7 @@ public final class TrashManager {
         decorate(inventory, clearSeconds());
         player.openInventory(inventory);
         ensureTimer();
+        org.vwtfafa.quicktrash.util.Sounds.play(plugin, player, "gui.sounds.open");
         plugin.messages().send(player, "trash-opened");
     }
 

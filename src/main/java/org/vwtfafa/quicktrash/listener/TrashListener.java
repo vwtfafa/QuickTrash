@@ -58,6 +58,7 @@ public final class TrashListener implements Listener {
         if (requiresConfirmation(player, slot, item)) return;
         top.setItem(slot, null);
         sendDeleted(player, item);
+        org.vwtfafa.quicktrash.util.Sounds.play(plugin, player, "gui.sounds.delete");
     }
 
     private void moveFromPlayer(Player player, InventoryClickEvent event) {
