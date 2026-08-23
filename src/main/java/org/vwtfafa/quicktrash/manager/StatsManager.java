@@ -49,8 +49,8 @@ public final class StatsManager {
     public void flushIfDirty() { if (dirty) flushAsync(); }
 
     private void flushAsync() {
-        dirty = false;
         YamlConfiguration config = snapshotConfig();
+        dirty = false;
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> writeFile(config));
     }
 

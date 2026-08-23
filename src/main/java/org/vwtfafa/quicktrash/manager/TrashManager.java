@@ -165,8 +165,8 @@ public final class TrashManager {
     private void markDirty() { dirty = true; }
 
     private void flushAsync() {
-        dirty = false;
         YamlConfiguration config = snapshotConfig();
+        dirty = false;
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> writeFile(config));
     }
 
