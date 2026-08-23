@@ -40,6 +40,7 @@ public final class QuickTrash extends JavaPlugin {
     }
 
     @Override public void onDisable() {
+        getServer().getScheduler().cancelTasks(this);
         if (trash != null) trash.shutdown();
         if (stats != null) stats.shutdown();
     }
