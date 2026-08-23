@@ -4,9 +4,11 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class MessageService {
@@ -39,5 +41,17 @@ public final class MessageService {
 
     public void actionbar(Player player, String path, Map<String, String> replacements) {
         player.sendActionBar(component(raw(path), replacements));
+    }
+
+    public void actionbar(Player player, Component component) { player.sendActionBar(component); }
+
+    public Component deletedItems(int amount, ItemStack item) {
+        String value = raw("item-deleted");
+        if (MINI_MESSAGE_TAG.matcher(value).find()) {
+            return miniMessage.deserialize(value,
+                Placeholder.unparsed("amount", String.valueOf(amount)),
+                Placeholder.component("item", Component.translatable(item.getType())));
+        }
+        return component(value, Map.of("amount", String.valueOf(amount), "item", item.getType().name()));
     }
 }

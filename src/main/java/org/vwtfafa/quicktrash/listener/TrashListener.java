@@ -97,7 +97,7 @@ public final class TrashListener implements Listener {
     }
 
     private void sendDeleted(Player player, ItemStack item) {
-        plugin.messages().actionbar(player, "item-deleted", Map.of("amount", String.valueOf(item.getAmount()), "item", item.getType().name()));
+        plugin.messages().actionbar(player, plugin.messages().deletedItems(item.getAmount(), item));
     }
 
     @EventHandler
