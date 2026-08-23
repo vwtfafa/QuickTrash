@@ -10,13 +10,13 @@ import org.bukkit.inventory.ItemStack;
 
 public final class ValuableItemChecker {
     private final TrashManager manager;
-    private volatile Set<Material> configuredMaterials;
+    private volatile MaterialRule cachedRule;
 
     public ValuableItemChecker(TrashManager manager) { this.manager = manager; }
 
     public boolean isValuable(ItemStack item) {
         if (item == null || item.getType().isAir()) return false;
-        if (configuredMaterials().contains(item.getType())) return true;
+        if (cachedRule().matches(item.getType())) return true;
         var meta = item.getItemMeta();
         if (meta == null) return false;
         return meta.hasCustomName()
@@ -26,18 +26,20 @@ public final class ValuableItemChecker {
             || item.getType() == Material.ENCHANTED_GOLDEN_APPLE;
     }
 
-    public void invalidate() { configuredMaterials = null; }
+    public void invalidate() { cachedRule = null; }
 
-    private Set<Material> configuredMaterials() {
-        Set<Material> cached = configuredMaterials;
+    private MaterialRule cachedRule() {
+        MaterialRule cached = cachedRule;
         if (cached != null) return cached;
         List<String> configured = manager.plugin().getConfig().getStringList("valuable-items.materials");
-        cached = configured.stream()
+        Set<Material> materials = configured.stream()
             .map(this::parseMaterial)
             .filter(Objects::nonNull)
             .collect(Collectors.toUnmodifiableSet());
-        configuredMaterials = cached;
-        return cached;
+        String mode = manager.plugin().getConfig().getString("valuable-items.mode", "WHITELIST");
+        boolean blacklist = "BLACKLIST".equalsIgnoreCase(mode);
+        cachedRule = new MaterialRule(materials, blacklist);
+        return cachedRule;
     }
 
     private Material parseMaterial(String value) {
@@ -47,5 +49,9 @@ public final class ValuableItemChecker {
             return null;
         }
         return material;
+    }
+
+    private record MaterialRule(Set<Material> materials, boolean blacklist) {
+        boolean matches(Material material) { return blacklist != materials.contains(material); }
     }
 }

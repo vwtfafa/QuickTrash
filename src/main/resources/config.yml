@@ -4,6 +4,7 @@ valuable-items:
   enabled: true
   require-confirmation: true
   confirmation-timeout-seconds: 5
+  mode: WHITELIST
   materials:
     - DIAMOND
     - EMERALD
