@@ -1,3 +1,5 @@
+metrics:
+  enabled: true
 trash:
   auto-clear-seconds: 30
 valuable-items:

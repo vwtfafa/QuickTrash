@@ -34,8 +34,10 @@ public final class QuickTrash extends JavaPlugin {
             event.registrar().register("quicktrash", "QuickTrash administration commands.", List.of(), new QuickTrashCommand(this));
         });
         // bStats
-        int pluginId = 33565;
-        new Metrics(this, pluginId);
+        if (getConfig().getBoolean("metrics.enabled", true)) {
+            int pluginId = 33565;
+            new Metrics(this, pluginId);
+        }
         getLogger().info("QuickTrash enabled.");
     }
 
