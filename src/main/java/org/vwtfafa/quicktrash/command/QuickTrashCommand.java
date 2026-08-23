@@ -19,6 +19,7 @@ public final class QuickTrashCommand implements CommandExecutor, TabCompleter {
         if (args[0].equalsIgnoreCase("reload")) {
             if (!sender.hasPermission("quicktrash.admin")) { plugin.messages().send(sender, "no-permission"); return true; }
             plugin.reloadConfig();
+            plugin.valuableItems().invalidate();
             plugin.messages().send(sender, "reload");
             return true;
         }
