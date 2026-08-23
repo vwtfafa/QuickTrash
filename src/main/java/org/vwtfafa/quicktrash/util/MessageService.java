@@ -1,7 +1,6 @@
 package org.vwtfafa.quicktrash.util;
 
 import java.util.Map;
-import java.util.regex.Pattern;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -12,18 +11,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class MessageService {
-    private static final Pattern MINI_MESSAGE_TAG = Pattern.compile("</?[a-zA-Z#][^<>]*>");
     private final JavaPlugin plugin;
     private final MiniMessage miniMessage = MiniMessage.miniMessage();
 
     public MessageService(JavaPlugin plugin) { this.plugin = plugin; }
 
     public Component component(String value, Map<String, String> replacements) {
-        String result = value;
-        for (var entry : replacements.entrySet()) {
-            result = result.replace("{" + entry.getKey() + "}", entry.getValue());
-        }
-        if (MINI_MESSAGE_TAG.matcher(result).find()) return miniMessage.deserialize(result);
+        String result = Placeholders.apply(value, replacements);
+        if (MessageFormats.looksLikeMiniMessage(result)) return miniMessage.deserialize(result);
         return LegacyComponentSerializer.legacyAmpersand().deserialize(result);
     }
 
@@ -47,7 +42,7 @@ public final class MessageService {
 
     public Component deletedItems(int amount, ItemStack item) {
         String value = raw("item-deleted");
-        if (MINI_MESSAGE_TAG.matcher(value).find()) {
+        if (MessageFormats.looksLikeMiniMessage(value)) {
             return miniMessage.deserialize(value,
                 Placeholder.unparsed("amount", String.valueOf(amount)),
                 Placeholder.component("item", Component.translatable(item.getType())));

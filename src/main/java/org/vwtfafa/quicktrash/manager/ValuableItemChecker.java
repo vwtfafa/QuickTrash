@@ -51,7 +51,7 @@ public final class ValuableItemChecker {
         return material;
     }
 
-    private record MaterialRule(Set<Material> materials, boolean blacklist) {
+    record MaterialRule(Set<Material> materials, boolean blacklist) {
         boolean matches(Material material) { return blacklist != materials.contains(material); }
     }
 }
