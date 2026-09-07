@@ -43,10 +43,14 @@ public final class MessageService {
     public Component deletedItems(int amount, ItemStack item) {
         String value = raw("item-deleted");
         if (MessageFormats.looksLikeMiniMessage(value)) {
-            return miniMessage.deserialize(value,
+            return miniMessage.deserialize(normalizeDeletedFormat(value),
                 Placeholder.unparsed("amount", String.valueOf(amount)),
                 Placeholder.component("item", Component.translatable(item.getType())));
         }
         return component(value, Map.of("amount", String.valueOf(amount), "item", item.getType().name()));
+    }
+
+    static String normalizeDeletedFormat(String value) {
+        return value.replace("{amount}", "<amount>").replace("{item}", "<item>");
     }
 }
