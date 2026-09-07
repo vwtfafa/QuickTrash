@@ -171,8 +171,9 @@ public final class TrashManager {
     private void markDirty() { dirty = true; }
 
     private void flushAsync() {
-        YamlConfiguration config = snapshotConfig();
+        // Clear first so marks during the snapshot are not lost; the next tick flushes again.
         dirty = false;
+        YamlConfiguration config = snapshotConfig();
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> writeFile(config));
     }
 
