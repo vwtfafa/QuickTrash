@@ -90,6 +90,7 @@ public final class TrashManager {
         TrashSession session = sessions.get(player.getUniqueId());
         if (session == null) return;
         for (int slot = 0; slot < TrashSession.SIZE; slot++) session.setItem(slot, inventory.getItem(slot));
+        session.refresh(expiryFromNow());
         markDirty();
     }
 
