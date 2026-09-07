@@ -27,6 +27,7 @@ QuickTrash is a lightweight Paper 26.2 plugin that provides a temporary trash in
 |---------|-------------|------------|
 | `/trash` | Open the trash inventory | `quicktrash.use` |
 | `/quicktrash version` | Display plugin version | — |
+| `/quicktrash stats` | Display deleted-item stats | — |
 | `/quicktrash reload` | Reload configuration | `quicktrash.admin` |
 
 ### Behavior
@@ -43,30 +44,39 @@ QuickTrash is a lightweight Paper 26.2 plugin that provides a temporary trash in
 The `config.yml` file generates automatically with these options:
 
 ```yaml
+metrics:
+  enabled: true
+
 # Time in seconds before trash contents are auto-cleared
-trash.auto-clear-seconds: 30
+trash:
+  auto-clear-seconds: 30
 
-# GUI settings
+# GUI settings (MiniMessage format, {seconds} is replaced in info-lore)
 gui:
-  title: "&8QuickTrash"
-  info-name: "QuickTrash"
+  title: '<dark_gray>QuickTrash'
+  info-name: '<aqua>QuickTrash'
+  sounds:
+    open: block.ender_chest.open
+    delete: block.lava.extinguish
   info-lore:
-    - "&7Right-click to store items"
-    - "&7Shift-click to delete instantly"
-    - "&7Valuable items require confirmation"
-    - "&7Time until auto-clear: {seconds}s"
+    - '<gray>Items are deleted after <white>{seconds}s<gray>.'
+    - '<gray>Shift-click an item to delete it now.'
 
-# Materials considered valuable (require confirmation to delete)
+# Valuable item protection (enchanted/named/custom-model/persistent data always count,
+# materials below additionally depend on mode: WHITELIST or BLACKLIST)
 valuable-items:
+  enabled: true
+  require-confirmation: true
+  # Require second click within this window (seconds) to delete valuable items
+  confirmation-timeout-seconds: 5
+  mode: WHITELIST
   materials:
     - DIAMOND
-    - NETHERITE_INGOT
-    - GOLD_INGOT
     - EMERALD
+    - NETHERITE_INGOT
+    - NETHERITE_SWORD
+    - NETHERITE_PICKAXE
     - ENCHANTED_GOLDEN_APPLE
-    - TOTEM_OF_UNDYING
-  # Require second click within this window (seconds) to delete valuable items
-  confirmation-window: 3
 ```
 
 ## Permissions
@@ -75,10 +85,11 @@ valuable-items:
 |------------|-------------|
 | `quicktrash.use` | Allows using `/trash` command |
 | `quicktrash.admin` | Allows reloading configuration |
+| `quicktrash.bypass` | Bypasses valuable item confirmations |
 
 ## Metrics
 
-This plugin uses [bStats](https://bstats.org/plugin/bukkit/QuickTrash/33565) to collect anonymous usage statistics. No personal data is collected. You can opt-out by disabling bStats in your server's `plugins/bStats/config.yml`.
+This plugin uses [bStats](https://bstats.org/plugin/bukkit/QuickTrash/33565) to collect anonymous usage statistics. No personal data is collected. You can opt-out per-plugin via `metrics.enabled: false` in `plugins/QuickTrash/config.yml` or globally by disabling bStats in your server's `plugins/bStats/config.yml`.
 
 ## Requirements
 
