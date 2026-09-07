@@ -105,7 +105,7 @@ cd QuickTrash
 ./gradlew build
 ```
 
-The compiled plugin will be in `build/libs/QuickTrash-1.0.0.jar`.
+The compiled plugin will be in `build/libs/QuickTrash-1.0.1.jar`.
 
 ---
 *QuickTrash is open source and maintained by [vwtfafa](https://github.com/vwtfafa).*
