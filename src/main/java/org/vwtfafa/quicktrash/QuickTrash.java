@@ -11,6 +11,7 @@ import org.vwtfafa.quicktrash.manager.ValuableItemChecker;
 import org.vwtfafa.quicktrash.util.MessageService;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SingleLineChart;
 
 /** Main entry point for the QuickTrash Paper plugin. */
 public final class QuickTrash extends JavaPlugin {
@@ -33,10 +34,11 @@ public final class QuickTrash extends JavaPlugin {
             event.registrar().register("trash", "Opens your QuickTrash inventory.", List.of(), new TrashCommand(this));
             event.registrar().register("quicktrash", "QuickTrash administration commands.", List.of(), new QuickTrashCommand(this));
         });
-        // bStats
+        // bStats (plugin id 33565 is registered as QuickTrash by vwtfafa)
         if (getConfig().getBoolean("metrics.enabled", true)) {
             int pluginId = 33565;
-            new Metrics(this, pluginId);
+            Metrics metrics = new Metrics(this, pluginId);
+            metrics.addCustomChart(new SingleLineChart("deleted_items", () -> (int) Math.min(stats.total(), Integer.MAX_VALUE)));
         }
         getLogger().info("QuickTrash enabled.");
     }

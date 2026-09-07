@@ -16,7 +16,7 @@ public final class StatsManager {
     private final Map<UUID, Long> players = new HashMap<>();
     private final Object ioLock = new Object();
     private volatile boolean dirty;
-    private long totalDeleted;
+    private volatile long totalDeleted;
     private File dataFile;
     private BukkitTask flushTask;
 
