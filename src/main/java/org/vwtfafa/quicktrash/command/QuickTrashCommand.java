@@ -39,9 +39,9 @@ public final class QuickTrashCommand implements BasicCommand {
         if (args.length != 1) return List.of();
         List<String> options = source.getSender().hasPermission("quicktrash.admin")
             ? List.of("reload", "version", "stats")
-            : List.of("stats");
+            : List.of("version", "stats");
         return options.stream().filter(option -> option.startsWith(args[0].toLowerCase())).toList();
     }
 
-    @Override public String permission() { return "quicktrash.use"; }
+    @Override public String permission() { return null; }
 }
