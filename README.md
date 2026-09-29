@@ -1,6 +1,6 @@
 # QuickTrash
 
-QuickTrash is a lightweight Paper 26.2 plugin that provides a temporary trash inventory for players.
+QuickTrash 2.0.0-beta.1 is a lightweight Paper 26.3 plugin that provides a temporary trash inventory for players.
 
 ## Features
 
@@ -93,7 +93,7 @@ This plugin uses [bStats](https://bstats.org/plugin/bukkit/QuickTrash/33565) to 
 
 ## Requirements
 
-- PaperMC 26.2 or compatible fork (Purpur, etc.)
+- PaperMC 26.3 Beta or compatible fork (Purpur, etc.)
 - Java 25
 - No additional dependencies
 
@@ -105,7 +105,7 @@ cd QuickTrash
 ./gradlew build
 ```
 
-The compiled plugin will be in `build/libs/QuickTrash-1.0.1.jar`.
+The compiled plugin will be in `build/libs/QuickTrash-2.0.0-beta.1.jar`.
 
 ---
 *QuickTrash is open source and maintained by [vwtfafa](https://github.com/vwtfafa).*

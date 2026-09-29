@@ -1,6 +1,6 @@
 # QuickTrash — Short Description (for Modrinth)
 
-**QuickTrash** is a lightweight Paper 26.2+ plugin that provides a temporary trash inventory for players. Players can open an 18-slot container via `/trash` to store items. Contents are saved and automatically deleted after a configurable time. Valuable items (enchanted, named, or defined in config) require confirmation before deletion. Shift-click deletes items instantly. The plugin uses bStats for anonymous usage statistics.
+**QuickTrash 2.0.0-beta.1** is a lightweight Paper 26.3 plugin that provides a temporary trash inventory for players. Players can open an 18-slot container via `/trash` to store items. Contents are saved and automatically deleted after a configurable time. Valuable items (enchanted, named, or defined in config) require confirmation before deletion. Shift-click deletes items instantly. The plugin uses bStats for anonymous usage statistics.
 
 ---
 
@@ -75,7 +75,7 @@ valuable-items:
 
 ## Requirements
 
-- **PaperMC** 26.2 or compatible fork (Purpur, etc.)
+- **PaperMC** 26.3 Beta or compatible fork (Purpur, etc.)
 - **Java** 25
 - No additional dependencies required
 
