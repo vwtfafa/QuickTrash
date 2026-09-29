@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "org.vwtfafa"
-version = "1.0.1"
+version = "2.0.0-beta.1"
 
 repositories {
     maven {
@@ -16,11 +16,11 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:26.2.build.119-stable")
+    compileOnly("io.papermc.paper:paper-api:26.3-pre-2.build.0-alpha")
 
     implementation("org.bstats:bstats-bukkit:3.2.1")
 
-    testImplementation("io.papermc.paper:paper-api:26.2.build.119-stable")
+    testImplementation("io.papermc.paper:paper-api:26.3-pre-2.build.0-alpha")
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
     testImplementation("org.mockito:mockito-core:5.23.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
