@@ -1,3 +1,4 @@
+config-version: 1
 metrics:
   enabled: true
 trash:

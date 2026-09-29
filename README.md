@@ -41,7 +41,7 @@ QuickTrash 2.0.0-beta.1 is a lightweight Paper 26.3 plugin that provides a tempo
 
 ## Configuration
 
-The `config.yml` file generates automatically with these options:
+The `config.yml` file generates automatically with these options. On upgrades, missing default keys are added while existing values are preserved; `config-version` tracks the schema:
 
 ```yaml
 metrics:

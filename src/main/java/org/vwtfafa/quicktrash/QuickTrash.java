@@ -8,6 +8,7 @@ import org.vwtfafa.quicktrash.listener.TrashListener;
 import org.vwtfafa.quicktrash.manager.StatsManager;
 import org.vwtfafa.quicktrash.manager.TrashManager;
 import org.vwtfafa.quicktrash.manager.ValuableItemChecker;
+import org.vwtfafa.quicktrash.util.ConfigMigrator;
 import org.vwtfafa.quicktrash.util.MessageService;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bstats.bukkit.Metrics;
@@ -22,6 +23,11 @@ public final class QuickTrash extends JavaPlugin {
 
     @Override public void onEnable() {
         saveDefaultConfig();
+        reloadConfig();
+        if (ConfigMigrator.migrate(getConfig(), getConfig().getDefaults())) {
+            saveConfig();
+            getLogger().info("Migrated config.yml to version " + getConfig().getInt("config-version"));
+        }
         messages = new MessageService(this);
         trash = new TrashManager(this);
         valuableItems = new ValuableItemChecker(trash);
