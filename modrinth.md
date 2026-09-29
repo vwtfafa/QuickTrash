@@ -15,7 +15,7 @@ QuickTrash is a minimalist Paper plugin that adds temporary trash functionality 
 - **18-Slot Trash Inventory**: Open via `/trash` a temporary container
 - **Auto-cleanup**: Contents are deleted after a configurable time (default: 30 seconds)
 - **Instant Delete**: Shift-click deletes items without confirmation
-- **Valuable Item Protection**: Enchanted, named items and configured materials require double-click confirmation
+- **Valuable Item Protection**: Enchanted, named, data-component-customized, and configured items use a confirmation dialog
 - **bStats Integration**: Anonymous usage tracking with plugin ID 33565
 - **Configurable**: Timeout, GUI texts, and valuable materials are adjustable
 

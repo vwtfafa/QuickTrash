@@ -36,7 +36,7 @@ QuickTrash 2.0.0-beta.1 is a lightweight Paper 26.3 plugin that provides a tempo
 - Contents are saved to `plugins/QuickTrash/trash-data.yml` while player is online
 - Items are automatically deleted after the configured timeout (default: 30 seconds)
 - Shift-clicking an item deletes it immediately without confirmation
-- Items classified as "valuable" require a second click within the confirmation window to delete
+- Valuable items use a Paper confirmation dialog before being moved to trash or permanently deleted
 - Valuable items include: enchanted items, named items, custom model data, persistent data, and materials listed in config
 
 ## Configuration
@@ -67,7 +67,7 @@ gui:
 valuable-items:
   enabled: true
   require-confirmation: true
-  # Require second click within this window (seconds) to delete valuable items
+  # Confirmation dialog action expires after this many seconds
   confirmation-timeout-seconds: 5
   mode: WHITELIST
   materials:

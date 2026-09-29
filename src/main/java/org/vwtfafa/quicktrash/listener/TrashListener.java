@@ -1,8 +1,15 @@
 package org.vwtfafa.quicktrash.listener;
 
-import java.util.HashMap;
+import java.time.Duration;
 import java.util.Map;
-import java.util.UUID;
+import io.papermc.paper.dialog.Dialog;
+import io.papermc.paper.registry.data.dialog.ActionButton;
+import io.papermc.paper.registry.data.dialog.DialogBase;
+import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.body.DialogBody;
+import io.papermc.paper.registry.data.dialog.type.DialogType;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickCallback;
 import org.vwtfafa.quicktrash.QuickTrash;
 import org.vwtfafa.quicktrash.gui.TrashHolder;
 import org.vwtfafa.quicktrash.manager.TrashManager;
@@ -24,7 +31,6 @@ import org.bukkit.inventory.ItemStack;
 public final class TrashListener implements Listener {
     private final QuickTrash plugin;
     private final TrashManager manager;
-    private final Map<UUID, PendingDeletion> pending = new HashMap<>();
 
     public TrashListener(QuickTrash plugin) {
         this.plugin = plugin;
@@ -58,6 +64,10 @@ public final class TrashListener implements Listener {
     private void deleteFromTrash(Player player, Inventory top, int slot, ItemStack item) {
         if (item == null || item.getType().isAir()) return;
         if (requiresConfirmation(player, PendingDeletion.TRASH_INVENTORY, slot, item)) return;
+        deleteTrashItem(player, top, slot, item);
+    }
+
+    private void deleteTrashItem(Player player, Inventory top, int slot, ItemStack item) {
         top.setItem(slot, null);
         plugin.stats().add(player.getUniqueId(), item.getAmount());
         sendDeleted(player, item);
@@ -70,9 +80,13 @@ public final class TrashListener implements Listener {
         if (event.getClickedInventory() != bottom || item == null || item.getType().isAir()) return;
         int sourceSlot = event.getSlot();
         if (requiresConfirmation(player, PendingDeletion.PLAYER_INVENTORY, sourceSlot, item)) return;
+        moveItemIntoTrash(player, event.getView().getTopInventory(), bottom, sourceSlot, item);
+    }
+
+    private void moveItemIntoTrash(Player player, Inventory top, Inventory bottom, int sourceSlot, ItemStack item) {
         int expected = item.getAmount();
         ItemStack deposit = item.clone();
-        int leftover = manager.put(player, event.getView().getTopInventory(), deposit);
+        int leftover = manager.put(player, top, deposit);
         if (leftover == -1) {
             plugin.messages().send(player, "no-space");
             return;
@@ -92,18 +106,73 @@ public final class TrashListener implements Listener {
         if (player.hasPermission("quicktrash.bypass") || !plugin.getConfig().getBoolean("valuable-items.enabled", true)
             || !plugin.getConfig().getBoolean("valuable-items.require-confirmation", true)
             || !plugin.valuableItems().isValuable(item)) return false;
-        long now = System.currentTimeMillis();
-        PendingDeletion previous = pending.get(player.getUniqueId());
         int timeout = Math.max(1, plugin.getConfig().getInt("valuable-items.confirmation-timeout-seconds", 5));
-        if (previous != null && previous.inventory() == inventoryKind && previous.slot() == slot
-            && previous.item().isSimilar(item) && now - previous.createdAt() <= timeout * 1000L) {
-            pending.remove(player.getUniqueId());
-            return false;
-        }
-        pending.put(player.getUniqueId(), new PendingDeletion(inventoryKind, slot, item.clone(), now));
-        plugin.messages().send(player, "valuable-warning");
-        plugin.messages().send(player, "confirmation-required");
+        PendingDeletion deletion = new PendingDeletion(inventoryKind, slot, item.clone());
+        showConfirmation(player, deletion, timeout);
         return true;
+    }
+
+    private void showConfirmation(Player player, PendingDeletion deletion, int timeout) {
+        Map<String, String> replacements = Map.of(
+            "amount", String.valueOf(deletion.item().getAmount()),
+            "item", deletion.item().getType().name(),
+            "seconds", String.valueOf(timeout)
+        );
+        String bodyKey = deletion.inventory() == PendingDeletion.TRASH_INVENTORY
+            ? "confirmation-delete-body"
+            : "confirmation-move-body";
+        String bodyFallback = deletion.inventory() == PendingDeletion.TRASH_INVENTORY
+            ? "<gray>Delete {amount}x {item} permanently within {seconds}s?"
+            : "<gray>Move {amount}x {item} into temporary trash within {seconds}s?";
+        Component body = configuredMessage(bodyKey, bodyFallback, replacements);
+        Component title = plugin.messages().message("valuable-warning");
+        ClickCallback.Options callbackOptions = ClickCallback.Options.builder()
+            .uses(1)
+            .lifetime(Duration.ofSeconds(timeout))
+            .build();
+        Dialog dialog = Dialog.create(builder -> builder.empty()
+            .base(DialogBase.builder(title).body(java.util.List.of(DialogBody.plainMessage(body))).build())
+            .type(DialogType.confirmation(
+                ActionButton.create(
+                    configuredMessage("confirmation-confirm", "<red>Confirm", Map.of()),
+                    Component.empty(),
+                    150,
+                    DialogAction.customClick((response, audience) -> {
+                        if (audience instanceof Player confirmingPlayer) {
+                            plugin.getServer().getScheduler().runTask(plugin, () -> confirmDeletion(confirmingPlayer, deletion));
+                        }
+                    }, callbackOptions)
+                ),
+                ActionButton.create(
+                    configuredMessage("confirmation-cancel", "<gray>Cancel", Map.of()),
+                    Component.empty(),
+                    150,
+                    null
+                )
+            )));
+        player.showDialog(dialog);
+    }
+
+    private Component configuredMessage(String key, String fallback, Map<String, String> replacements) {
+        String value = plugin.getConfig().getString("messages." + key, fallback);
+        return plugin.messages().component(value, replacements);
+    }
+
+    private void confirmDeletion(Player player, PendingDeletion deletion) {
+        if (!player.isOnline()) return;
+        Inventory top = player.getOpenInventory().getTopInventory();
+        if (!(top.getHolder() instanceof TrashHolder holder) || !holder.playerId().equals(player.getUniqueId())) return;
+        Inventory source = deletion.inventory() == PendingDeletion.TRASH_INVENTORY
+            ? top
+            : player.getOpenInventory().getBottomInventory();
+        if (deletion.slot() < 0 || deletion.slot() >= source.getSize()) return;
+        ItemStack current = source.getItem(deletion.slot());
+        if (current == null || current.getAmount() != deletion.item().getAmount() || !current.isSimilar(deletion.item())) return;
+        if (deletion.inventory() == PendingDeletion.TRASH_INVENTORY) {
+            deleteTrashItem(player, top, deletion.slot(), current);
+        } else {
+            moveItemIntoTrash(player, top, source, deletion.slot(), current);
+        }
     }
 
     private void sendDeleted(Player player, ItemStack item) {
@@ -114,7 +183,6 @@ public final class TrashListener implements Listener {
     public void onClose(InventoryCloseEvent event) {
         if (!(event.getInventory().getHolder() instanceof TrashHolder holder)) return;
         if (event.getPlayer() instanceof Player player) manager.snapshot(player, event.getInventory());
-        pending.remove(holder.playerId());
     }
 
     @EventHandler
@@ -141,7 +209,6 @@ public final class TrashListener implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         closeAndSnapshot(event.getPlayer());
-        pending.remove(event.getPlayer().getUniqueId());
     }
 
     @EventHandler
@@ -156,7 +223,7 @@ public final class TrashListener implements Listener {
         }
     }
 
-    private record PendingDeletion(byte inventory, int slot, ItemStack item, long createdAt) {
+    private record PendingDeletion(byte inventory, int slot, ItemStack item) {
         static final byte TRASH_INVENTORY = 0;
         static final byte PLAYER_INVENTORY = 1;
     }
