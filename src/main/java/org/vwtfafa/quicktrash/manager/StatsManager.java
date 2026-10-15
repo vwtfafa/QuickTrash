@@ -1,13 +1,12 @@
 package org.vwtfafa.quicktrash.manager;
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.scheduler.BukkitTask;
 import org.vwtfafa.quicktrash.QuickTrash;
 import org.vwtfafa.quicktrash.util.PersistenceFiles;
 
@@ -18,7 +17,7 @@ public final class StatsManager {
     private volatile boolean dirty;
     private volatile long totalDeleted;
     private File dataFile;
-    private BukkitTask flushTask;
+    private ScheduledTask flushTask;
 
     public StatsManager(QuickTrash plugin) { this.plugin = plugin; }
 
@@ -53,7 +52,7 @@ public final class StatsManager {
 
     public void startFlushTask() {
         if (flushTask == null) {
-            flushTask = Bukkit.getScheduler().runTaskTimer(plugin, this::flushIfDirty, 20L, 20L);
+            flushTask = plugin.getServer().getGlobalRegionScheduler().runAtFixedRate(plugin, ignored -> flushIfDirty(), 20L, 20L);
         }
     }
 
@@ -61,7 +60,7 @@ public final class StatsManager {
         // Clear first so marks during the snapshot are not lost; the next tick flushes again.
         dirty = false;
         YamlConfiguration config = snapshotConfig();
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> writeFile(config));
+        plugin.getServer().getAsyncScheduler().runNow(plugin, ignored -> writeFile(config));
     }
 
     private YamlConfiguration snapshotConfig() {

@@ -1,5 +1,6 @@
 package org.vwtfafa.quicktrash.manager;
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +17,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.scheduler.BukkitTask;
 import net.kyori.adventure.text.Component;
 
 public final class TrashManager {
@@ -26,7 +26,7 @@ public final class TrashManager {
     private final Object ioLock = new Object();
     private volatile boolean dirty;
     private File dataFile;
-    private BukkitTask task;
+    private ScheduledTask task;
 
     public TrashManager(QuickTrash plugin) { this.plugin = plugin; }
     public QuickTrash plugin() { return plugin; }
@@ -131,7 +131,7 @@ public final class TrashManager {
 
     private void ensureTimer() {
         if (task != null || sessions.isEmpty()) return;
-        task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20L, 20L);
+        task = plugin.getServer().getGlobalRegionScheduler().runAtFixedRate(plugin, ignored -> tick(), 20L, 20L);
     }
 
     private void tick() {
@@ -182,7 +182,7 @@ public final class TrashManager {
         // Clear first so marks during the snapshot are not lost; the next tick flushes again.
         dirty = false;
         YamlConfiguration config = snapshotConfig();
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> writeFile(config));
+        plugin.getServer().getAsyncScheduler().runNow(plugin, ignored -> writeFile(config));
     }
 
     private YamlConfiguration snapshotConfig() {

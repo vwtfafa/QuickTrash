@@ -139,7 +139,8 @@ public final class TrashListener implements Listener {
                     150,
                     DialogAction.customClick((response, audience) -> {
                         if (audience instanceof Player confirmingPlayer) {
-                            plugin.getServer().getScheduler().runTask(plugin, () -> confirmDeletion(confirmingPlayer, deletion));
+                            confirmingPlayer.getScheduler().run(plugin,
+                                ignored -> confirmDeletion(confirmingPlayer, deletion), null);
                         }
                     }, callbackOptions)
                 ),
@@ -197,7 +198,8 @@ public final class TrashListener implements Listener {
         }
         boolean touchesTrash = event.getRawSlots().stream().anyMatch(slot -> slot < TrashSession.SIZE);
         if (touchesTrash) {
-            plugin.getServer().getScheduler().runTask(plugin, () -> manager.snapshot(player, event.getView().getTopInventory()));
+            player.getScheduler().run(plugin,
+                ignored -> manager.snapshot(player, event.getView().getTopInventory()), null);
         }
     }
 
@@ -224,11 +226,11 @@ public final class TrashListener implements Listener {
 
     private void closeAndSnapshot(Player player) {
         snapshotOpen(player);
-        plugin.getServer().getScheduler().runTask(plugin, () -> {
+        player.getScheduler().run(plugin, ignored -> {
             if (player.isOnline() && player.getOpenInventory().getTopInventory().getHolder() instanceof TrashHolder) {
                 player.closeInventory();
             }
-        });
+        }, null);
     }
 
     private record PendingDeletion(byte inventory, int slot, ItemStack item) {
