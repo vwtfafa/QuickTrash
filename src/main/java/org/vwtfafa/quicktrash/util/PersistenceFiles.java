@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.logging.Level;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -13,9 +14,12 @@ public final class PersistenceFiles {
     private PersistenceFiles() { }
 
     public static YamlConfiguration loadOrBackup(JavaPlugin plugin, File file) {
+        YamlConfiguration config = new YamlConfiguration();
         try {
-            return YamlConfiguration.loadConfiguration(file);
-        } catch (RuntimeException exception) {
+            // load(File) reports parse errors, unlike loadConfiguration(File), which only logs them.
+            config.load(file);
+            return config;
+        } catch (IOException | InvalidConfigurationException exception) {
             plugin.getLogger().log(Level.SEVERE, "Could not read " + file.getName() + "; starting with empty data", exception);
             moveAside(plugin, file);
             return null;
