@@ -2,7 +2,9 @@ package org.vwtfafa.quicktrash.manager;
 
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import java.io.File;
+import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.vwtfafa.quicktrash.QuickTrash;
@@ -40,16 +42,39 @@ public final class TrashManager {
             try {
                 UUID id = UUID.fromString(key);
                 TrashSession session = new TrashSession(id, root.getLong(key + ".expires-at"));
-                var list = root.getList(key + ".items", java.util.List.of());
-                for (int slot = 0; slot < Math.min(TrashSession.SIZE, list.size()); slot++) {
-                    if (list.get(slot) instanceof ItemStack item) session.setItem(slot, item);
+                ItemStack[] items = readItems(root.get(key + ".items"));
+                for (int slot = 0; slot < Math.min(TrashSession.SIZE, items.length); slot++) {
+                    if (items[slot] != null && !items[slot].isEmpty()) session.setItem(slot, items[slot]);
                 }
                 if (session.expiresAt() > System.currentTimeMillis()) sessions.put(id, session);
-            } catch (IllegalArgumentException ignored) {
-                plugin.getLogger().warning("Ignoring invalid trash session: " + key);
+            } catch (RuntimeException exception) {
+                // Broken sessions must never keep the plugin from starting.
+                plugin.getLogger().warning("Ignoring invalid trash session " + key + ": " + exception.getMessage());
             }
         }
         ensureTimer();
+    }
+
+    /**
+     * Reads the NBT blob written by current versions and falls back to the legacy YAML item list.
+     * NBT keeps the built-in data converter in the loop when items are loaded on newer server versions.
+     */
+    private static ItemStack[] readItems(Object stored) {
+        if (stored instanceof String encoded) {
+            if (encoded.isBlank()) return new ItemStack[TrashSession.SIZE];
+            ItemStack[] decoded = ItemStack.deserializeItemsFromBytes(Base64.getDecoder().decode(encoded));
+            for (int slot = 0; slot < decoded.length; slot++) {
+                if (decoded[slot] != null && decoded[slot].isEmpty()) decoded[slot] = null;
+            }
+            return decoded;
+        }
+        ItemStack[] items = new ItemStack[TrashSession.SIZE];
+        if (stored instanceof List<?> list) {
+            for (int slot = 0; slot < Math.min(TrashSession.SIZE, list.size()); slot++) {
+                if (list.get(slot) instanceof ItemStack item) items[slot] = item;
+            }
+        }
+        return items;
     }
 
     public void open(Player player) {
@@ -81,7 +106,7 @@ public final class TrashManager {
         ItemMeta meta = info.getItemMeta();
         meta.customName(plugin.messages().component(plugin.getConfig().getString("gui.info-name", "QuickTrash")));
         meta.lore(plugin.getConfig().getStringList("gui.info-lore").stream()
-            .map(line -> plugin.messages().component(line, java.util.Map.of("seconds", String.valueOf(seconds)))).toList());
+            .map(line -> plugin.messages().component(line, Map.of("seconds", String.valueOf(seconds)))).toList());
         info.setItemMeta(meta);
         return info;
     }
@@ -133,7 +158,7 @@ public final class TrashManager {
     private void tick() {
         long now = System.currentTimeMillis();
         boolean changed = false;
-        for (TrashSession session : java.util.List.copyOf(sessions.values())) {
+        for (TrashSession session : List.copyOf(sessions.values())) {
             UUID id = session.playerId();
             Player viewer = Bukkit.getPlayer(id);
             Inventory open = viewer != null && viewer.getOpenInventory().getTopInventory().getHolder() instanceof TrashHolder holder
@@ -186,7 +211,7 @@ public final class TrashManager {
         for (TrashSession session : sessions.values()) {
             String path = "sessions." + session.playerId();
             config.set(path + ".expires-at", session.expiresAt());
-            config.set(path + ".items", java.util.Arrays.asList(session.copyItems()));
+            config.set(path + ".items", Base64.getEncoder().encodeToString(ItemStack.serializeItemsAsBytes(session.copyItems())));
         }
         return config;
     }

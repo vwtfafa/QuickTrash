@@ -33,7 +33,7 @@ QuickTrash 2.0.0 is a lightweight Paper 26.3 plugin that provides a temporary tr
 ### Behavior
 
 - Trash inventory contains 18 slots for temporary item storage
-- Contents are saved to `plugins/QuickTrash/trash-data.yml` while player is online
+- Contents are saved to `plugins/QuickTrash/trash-data.yml` while the player is online; the items are stored as NBT blobs so they survive server and data-version updates
 - Items are automatically deleted after the configured timeout (default: 30 seconds)
 - Shift-clicking an item deletes it immediately without confirmation
 - Valuable items use a Paper confirmation dialog before being moved to trash or permanently deleted
