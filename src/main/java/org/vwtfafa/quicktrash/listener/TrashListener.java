@@ -1,6 +1,7 @@
 package org.vwtfafa.quicktrash.listener;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
@@ -113,23 +114,23 @@ public final class TrashListener implements Listener {
     private void showConfirmation(Player player, PendingDeletion deletion, int timeout) {
         Map<String, String> replacements = Map.of(
             "amount", String.valueOf(deletion.item().getAmount()),
-            "item", deletion.item().getType().name(),
             "seconds", String.valueOf(timeout)
         );
+        Map<String, Component> itemName = Map.of("item", deletion.item().effectiveName());
         String bodyKey = deletion.inventory() == PendingDeletion.TRASH_INVENTORY
             ? "confirmation-delete-body"
             : "confirmation-move-body";
         String bodyFallback = deletion.inventory() == PendingDeletion.TRASH_INVENTORY
             ? "<gray>Delete {amount}x {item} permanently within {seconds}s?"
             : "<gray>Move {amount}x {item} into temporary trash within {seconds}s?";
-        Component body = configuredMessage(bodyKey, bodyFallback, replacements);
+        Component body = configuredMessage(bodyKey, bodyFallback, replacements, itemName);
         Component title = plugin.messages().message("valuable-warning");
         ClickCallback.Options callbackOptions = ClickCallback.Options.builder()
             .uses(1)
             .lifetime(Duration.ofSeconds(timeout))
             .build();
         Dialog dialog = Dialog.create(builder -> builder.empty()
-            .base(DialogBase.builder(title).body(java.util.List.of(DialogBody.plainMessage(body))).build())
+            .base(DialogBase.builder(title).body(List.of(DialogBody.plainMessage(body))).build())
             .type(DialogType.confirmation(
                 ActionButton.create(
                     configuredMessage("confirmation-confirm", "<red>Confirm", Map.of()),
@@ -153,8 +154,13 @@ public final class TrashListener implements Listener {
     }
 
     private Component configuredMessage(String key, String fallback, Map<String, String> replacements) {
+        return configuredMessage(key, fallback, replacements, Map.of());
+    }
+
+    private Component configuredMessage(String key, String fallback, Map<String, String> replacements,
+                                        Map<String, Component> componentReplacements) {
         String value = plugin.getConfig().getString("messages." + key, fallback);
-        return plugin.messages().component(value, replacements);
+        return plugin.messages().component(value, replacements, componentReplacements);
     }
 
     private void confirmDeletion(Player player, PendingDeletion deletion) {
