@@ -18,7 +18,7 @@ public final class ValuableItemChecker {
     public ValuableItemChecker(TrashManager manager) { this.manager = manager; }
 
     public boolean isValuable(ItemStack item) {
-        if (item == null || item.getType().isAir()) return false;
+        if (item == null || item.isEmpty()) return false;
         if (cachedRule().matches(item.getType())) return true;
         if (hasValuableDataComponents(item)) return true;
         var meta = item.getItemMeta();
@@ -26,7 +26,7 @@ public final class ValuableItemChecker {
         return meta.hasCustomName()
             || meta.hasEnchants()
             || meta.hasCustomModelDataComponent()
-            || !meta.getPersistentDataContainer().getKeys().isEmpty()
+            || !meta.getPersistentDataContainer().isEmpty()
             || item.getType() == Material.ENCHANTED_GOLDEN_APPLE;
     }
 

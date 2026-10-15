@@ -68,7 +68,7 @@ public final class TrashManager {
     }
 
     private void decorate(Inventory inventory, long seconds) {
-        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemStack filler = ItemStack.of(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = filler.getItemMeta();
         fillerMeta.customName(Component.empty());
         filler.setItemMeta(fillerMeta);
@@ -77,7 +77,7 @@ public final class TrashManager {
     }
 
     private ItemStack infoItem(long seconds) {
-        ItemStack info = new ItemStack(Material.PAPER);
+        ItemStack info = ItemStack.of(Material.PAPER);
         ItemMeta meta = info.getItemMeta();
         meta.customName(plugin.messages().component(plugin.getConfig().getString("gui.info-name", "QuickTrash")));
         meta.lore(plugin.getConfig().getStringList("gui.info-lore").stream()
@@ -95,27 +95,23 @@ public final class TrashManager {
     }
 
     public int put(Player player, Inventory top, ItemStack item) {
-        if (item == null || item.getType().isAir() || !sessions.containsKey(player.getUniqueId())) return -1;
+        if (item == null || item.isEmpty() || !sessions.containsKey(player.getUniqueId())) return -1;
         int remaining = item.getAmount();
         int maxStack = item.getMaxStackSize();
         for (int slot = 0; slot < TrashSession.SIZE && remaining > 0; slot++) {
             ItemStack existing = top.getItem(slot);
-            if (existing == null || existing.getType().isAir() || !existing.isSimilar(item)) continue;
+            if (existing == null || existing.isEmpty() || !existing.isSimilar(item)) continue;
             int space = maxStack - existing.getAmount();
             if (space <= 0) continue;
             int transfer = Math.min(space, remaining);
-            ItemStack merged = existing.clone();
-            merged.setAmount(existing.getAmount() + transfer);
-            top.setItem(slot, merged);
+            top.setItem(slot, existing.asQuantity(existing.getAmount() + transfer));
             remaining -= transfer;
         }
         for (int slot = 0; slot < TrashSession.SIZE && remaining > 0; slot++) {
             ItemStack existing = top.getItem(slot);
-            if (existing != null && !existing.getType().isAir()) continue;
+            if (existing != null && !existing.isEmpty()) continue;
             int transfer = Math.min(maxStack, remaining);
-            ItemStack stack = item.clone();
-            stack.setAmount(transfer);
-            top.setItem(slot, stack);
+            top.setItem(slot, item.asQuantity(transfer));
             remaining -= transfer;
         }
         if (remaining == item.getAmount()) return -1;

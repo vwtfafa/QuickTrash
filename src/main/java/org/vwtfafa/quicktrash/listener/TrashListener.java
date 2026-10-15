@@ -62,7 +62,7 @@ public final class TrashListener implements Listener {
     }
 
     private void deleteFromTrash(Player player, Inventory top, int slot, ItemStack item) {
-        if (item == null || item.getType().isAir()) return;
+        if (item == null || item.isEmpty()) return;
         if (requiresConfirmation(player, PendingDeletion.TRASH_INVENTORY, slot, item)) return;
         deleteTrashItem(player, top, slot, item);
     }
@@ -77,7 +77,7 @@ public final class TrashListener implements Listener {
     private void moveFromPlayer(Player player, InventoryClickEvent event) {
         ItemStack item = event.getCurrentItem();
         Inventory bottom = event.getView().getBottomInventory();
-        if (event.getClickedInventory() != bottom || item == null || item.getType().isAir()) return;
+        if (event.getClickedInventory() != bottom || item == null || item.isEmpty()) return;
         int sourceSlot = event.getSlot();
         if (requiresConfirmation(player, PendingDeletion.PLAYER_INVENTORY, sourceSlot, item)) return;
         moveItemIntoTrash(player, event.getView().getTopInventory(), bottom, sourceSlot, item);
@@ -96,9 +96,7 @@ public final class TrashListener implements Listener {
         if (leftover == 0) {
             bottom.setItem(sourceSlot, null);
         } else {
-            ItemStack remainder = item.clone();
-            remainder.setAmount(leftover);
-            bottom.setItem(sourceSlot, remainder);
+            bottom.setItem(sourceSlot, item.asQuantity(leftover));
         }
     }
 

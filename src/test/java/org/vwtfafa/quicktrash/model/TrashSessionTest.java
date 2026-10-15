@@ -3,7 +3,6 @@ package org.vwtfafa.quicktrash.model;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.UUID;
-import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -32,12 +31,10 @@ class TrashSessionTest {
         assertEquals(0, session.itemCount());
     }
 
-    private ItemStack stack(int amount, boolean air) {
-        Material material = Mockito.mock(Material.class);
-        Mockito.when(material.isAir()).thenReturn(air);
+    private ItemStack stack(int amount, boolean empty) {
         ItemStack item = Mockito.mock(ItemStack.class);
         Mockito.when(item.getAmount()).thenReturn(amount);
-        Mockito.when(item.getType()).thenReturn(material);
+        Mockito.when(item.isEmpty()).thenReturn(empty);
         return item;
     }
 }

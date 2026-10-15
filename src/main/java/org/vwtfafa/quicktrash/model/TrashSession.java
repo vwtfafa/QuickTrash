@@ -24,7 +24,7 @@ public final class TrashSession {
     public int itemCount() {
         int count = 0;
         for (ItemStack item : items) {
-            if (item != null && !item.getType().isAir()) count += item.getAmount();
+            if (item != null && !item.isEmpty()) count += item.getAmount();
         }
         return count;
     }
