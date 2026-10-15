@@ -1,13 +1,13 @@
 package org.vwtfafa.quicktrash.manager;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.vwtfafa.quicktrash.QuickTrash;
 import org.vwtfafa.quicktrash.gui.TrashHolder;
 import org.vwtfafa.quicktrash.model.TrashSession;
+import org.vwtfafa.quicktrash.util.PersistenceFiles;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -34,8 +34,8 @@ public final class TrashManager {
     public void load() {
         dataFile = new File(plugin.getDataFolder(), "trash-data.yml");
         if (!dataFile.exists()) return;
-        ConfigurationSection root = YamlConfiguration.loadConfiguration(dataFile).getConfigurationSection("sessions");
-        if (root == null) return;
+        YamlConfiguration config = PersistenceFiles.loadOrBackup(plugin, dataFile);
+        if (config == null || !(config.get("sessions") instanceof ConfigurationSection root)) return;
         for (String key : root.getKeys(false)) {
             try {
                 UUID id = UUID.fromString(key);
@@ -104,7 +104,9 @@ public final class TrashManager {
             int space = maxStack - existing.getAmount();
             if (space <= 0) continue;
             int transfer = Math.min(space, remaining);
-            existing.setAmount(existing.getAmount() + transfer);
+            ItemStack merged = existing.clone();
+            merged.setAmount(existing.getAmount() + transfer);
+            top.setItem(slot, merged);
             remaining -= transfer;
         }
         for (int slot = 0; slot < TrashSession.SIZE && remaining > 0; slot++) {
@@ -137,27 +139,29 @@ public final class TrashManager {
         boolean changed = false;
         for (TrashSession session : java.util.List.copyOf(sessions.values())) {
             UUID id = session.playerId();
+            Player viewer = Bukkit.getPlayer(id);
+            Inventory open = viewer != null && viewer.getOpenInventory().getTopInventory().getHolder() instanceof TrashHolder holder
+                && holder.playerId().equals(id)
+                ? viewer.getOpenInventory().getTopInventory()
+                : null;
             if (session.expiresAt() <= now) {
-                Player player = Bukkit.getPlayer(id);
-                if (player != null && player.getOpenInventory().getTopInventory().getHolder() instanceof TrashHolder holder
-                    && holder.playerId().equals(id)) {
-                    player.closeInventory();
-                    plugin.messages().send(player, "trash-cleared");
-                }
+                if (open != null) syncFromInventory(session, open);
                 plugin.stats().add(id, session.itemCount());
                 sessions.remove(id);
                 lastInfoSeconds.remove(id);
                 changed = true;
+                if (open != null) {
+                    viewer.closeInventory();
+                    plugin.messages().send(viewer, "trash-cleared");
+                }
                 continue;
             }
-            Player viewer = Bukkit.getPlayer(id);
-            if (viewer != null && viewer.getOpenInventory().getTopInventory().getHolder() instanceof TrashHolder holder
-                && holder.playerId().equals(id)) {
+            if (open != null) {
                 long seconds = Math.max(0, (session.expiresAt() - now + 999) / 1000);
                 Long previous = lastInfoSeconds.get(id);
                 if (previous == null || previous != seconds) {
                     lastInfoSeconds.put(id, seconds);
-                    viewer.getOpenInventory().getTopInventory().setItem(TrashHolder.INFO_SLOT, infoItem(seconds));
+                    open.setItem(TrashHolder.INFO_SLOT, infoItem(seconds));
                 }
             }
         }
@@ -166,6 +170,10 @@ public final class TrashManager {
             task = null;
         }
         if (changed || dirty) flushAsync();
+    }
+
+    private static void syncFromInventory(TrashSession session, Inventory inventory) {
+        for (int slot = 0; slot < TrashSession.SIZE; slot++) session.setItem(slot, inventory.getItem(slot));
     }
 
     private void markDirty() { dirty = true; }
@@ -190,8 +198,7 @@ public final class TrashManager {
     private void writeFile(YamlConfiguration config) {
         if (dataFile == null) return;
         synchronized (ioLock) {
-            try { config.save(dataFile); }
-            catch (IOException exception) { plugin.getLogger().log(java.util.logging.Level.SEVERE, "Could not save trash data", exception); }
+            PersistenceFiles.save(plugin, config, dataFile);
         }
     }
 

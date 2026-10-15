@@ -208,7 +208,7 @@ public final class TrashListener implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        closeAndSnapshot(event.getPlayer());
+        snapshotOpen(event.getPlayer());
     }
 
     @EventHandler
@@ -216,11 +216,19 @@ public final class TrashListener implements Listener {
     @EventHandler
     public void onWorldChange(PlayerChangedWorldEvent event) { closeAndSnapshot(event.getPlayer()); }
 
-    private void closeAndSnapshot(Player player) {
+    private void snapshotOpen(Player player) {
         if (player.getOpenInventory().getTopInventory().getHolder() instanceof TrashHolder) {
             manager.snapshot(player, player.getOpenInventory().getTopInventory());
-            plugin.getServer().getScheduler().runTask(plugin, () -> player.closeInventory());
         }
+    }
+
+    private void closeAndSnapshot(Player player) {
+        snapshotOpen(player);
+        plugin.getServer().getScheduler().runTask(plugin, () -> {
+            if (player.isOnline() && player.getOpenInventory().getTopInventory().getHolder() instanceof TrashHolder) {
+                player.closeInventory();
+            }
+        });
     }
 
     private record PendingDeletion(byte inventory, int slot, ItemStack item) {

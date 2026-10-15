@@ -1,7 +1,6 @@
 package org.vwtfafa.quicktrash.manager;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -10,6 +9,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.scheduler.BukkitTask;
 import org.vwtfafa.quicktrash.QuickTrash;
+import org.vwtfafa.quicktrash.util.PersistenceFiles;
 
 public final class StatsManager {
     private final QuickTrash plugin;
@@ -25,10 +25,11 @@ public final class StatsManager {
     public void load() {
         dataFile = new File(plugin.getDataFolder(), "stats.yml");
         if (!dataFile.exists()) return;
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(dataFile);
-        totalDeleted = config.getLong("total-deleted", 0);
-        ConfigurationSection section = config.getConfigurationSection("players");
-        if (section == null) return;
+        YamlConfiguration config = PersistenceFiles.loadOrBackup(plugin, dataFile);
+        if (config == null) return;
+        Object total = config.get("total-deleted");
+        if (total instanceof Number number) totalDeleted = number.longValue();
+        if (!(config.get("players") instanceof ConfigurationSection section)) return;
         for (String key : section.getKeys(false)) {
             try {
                 players.put(UUID.fromString(key), section.getLong(key));
@@ -75,8 +76,7 @@ public final class StatsManager {
     private void writeFile(YamlConfiguration config) {
         if (dataFile == null) return;
         synchronized (ioLock) {
-            try { config.save(dataFile); }
-            catch (IOException exception) { plugin.getLogger().log(java.util.logging.Level.SEVERE, "Could not save stats", exception); }
+            PersistenceFiles.save(plugin, config, dataFile);
         }
     }
 
