@@ -1,12 +1,12 @@
 plugins {
     java
     checkstyle
-    id("com.github.spotbugs") version "6.5.11"
+    id("com.github.spotbugs") version "6.5.13"
     id("com.gradleup.shadow") version "9.6.1"
 }
 
 group = "org.vwtfafa"
-version = "2.0.0-beta.1"
+version = "2.0.0"
 
 repositories {
     maven {
@@ -16,13 +16,13 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:26.3-pre-2.build.0-alpha")
+    compileOnly("io.papermc.paper:paper-api:26.3.build.190-stable")
 
     implementation("org.bstats:bstats-bukkit:3.2.1")
 
-    testImplementation("io.papermc.paper:paper-api:26.3-pre-2.build.0-alpha")
+    testImplementation("io.papermc.paper:paper-api:26.3.build.190-stable")
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
-    testImplementation("org.mockito:mockito-core:5.23.0")
+    testImplementation("org.mockito:mockito-core:5.24.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -67,12 +67,12 @@ tasks.build {
 }
 
 checkstyle {
-    toolVersion = "10.26.0"
+    toolVersion = "14.3.0"
     configDirectory = file("config/checkstyle")
 }
 
 spotbugs {
-    toolVersion = "4.10.3"
+    toolVersion = "4.10.5"
     ignoreFailures = false
     effort = com.github.spotbugs.snom.Effort.valueOf("MAX")
     reportLevel = com.github.spotbugs.snom.Confidence.valueOf("LOW")
