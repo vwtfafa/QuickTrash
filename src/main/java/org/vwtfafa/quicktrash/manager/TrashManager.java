@@ -16,6 +16,7 @@ import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -172,7 +173,7 @@ public final class TrashManager {
                 lastInfoSeconds.remove(id);
                 changed = true;
                 if (open != null) {
-                    viewer.closeInventory();
+                    viewer.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
                     plugin.messages().send(viewer, "trash-cleared");
                 }
                 continue;

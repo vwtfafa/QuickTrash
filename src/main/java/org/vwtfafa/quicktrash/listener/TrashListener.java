@@ -232,7 +232,7 @@ public final class TrashListener implements Listener {
         snapshotOpen(player);
         player.getScheduler().run(plugin, ignored -> {
             if (player.isOnline() && player.getOpenInventory().getTopInventory().getHolder() instanceof TrashHolder) {
-                player.closeInventory();
+                player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
             }
         }, null);
     }
