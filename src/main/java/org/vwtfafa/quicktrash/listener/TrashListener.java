@@ -186,7 +186,7 @@ public final class TrashListener implements Listener {
 
     @EventHandler
     public void onClose(InventoryCloseEvent event) {
-        if (!(event.getInventory().getHolder() instanceof TrashHolder holder)) return;
+        if (!(event.getInventory().getHolder() instanceof TrashHolder)) return;
         if (event.getPlayer() instanceof Player player) manager.snapshot(player, event.getInventory());
     }
 
