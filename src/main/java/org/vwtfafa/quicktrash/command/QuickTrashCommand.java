@@ -40,7 +40,8 @@ public final class QuickTrashCommand implements BasicCommand {
         List<String> options = source.getSender().hasPermission("quicktrash.admin")
             ? List.of("reload", "version", "stats")
             : List.of("version", "stats");
-        return options.stream().filter(option -> option.startsWith(args[0].toLowerCase())).toList();
+        String prefix = args[0].toLowerCase(java.util.Locale.ROOT);
+        return options.stream().filter(option -> option.startsWith(prefix)).toList();
     }
 
     @Override public String permission() { return null; }

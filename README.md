@@ -1,6 +1,6 @@
 # QuickTrash
 
-QuickTrash is a lightweight Paper 26.2 plugin that provides a temporary trash inventory for players.
+QuickTrash 2.0.0 is a lightweight Paper 26.3 plugin that provides a temporary trash inventory for players.
 
 ## Features
 
@@ -33,15 +33,15 @@ QuickTrash is a lightweight Paper 26.2 plugin that provides a temporary trash in
 ### Behavior
 
 - Trash inventory contains 18 slots for temporary item storage
-- Contents are saved to `plugins/QuickTrash/trash-data.yml` while player is online
+- Contents are saved to `plugins/QuickTrash/trash-data.yml` while the player is online; the items are stored as NBT blobs so they survive server and data-version updates
 - Items are automatically deleted after the configured timeout (default: 30 seconds)
 - Shift-clicking an item deletes it immediately without confirmation
-- Items classified as "valuable" require a second click within the confirmation window to delete
+- Valuable items use a Paper confirmation dialog before being moved to trash or permanently deleted
 - Valuable items include: enchanted items, named items, custom model data, persistent data, and materials listed in config
 
 ## Configuration
 
-The `config.yml` file generates automatically with these options:
+The `config.yml` file generates automatically with these options. On upgrades, missing default keys are added while existing values are preserved; `config-version` tracks the schema:
 
 ```yaml
 metrics:
@@ -67,7 +67,7 @@ gui:
 valuable-items:
   enabled: true
   require-confirmation: true
-  # Require second click within this window (seconds) to delete valuable items
+  # Confirmation dialog action expires after this many seconds
   confirmation-timeout-seconds: 5
   mode: WHITELIST
   materials:
@@ -93,7 +93,7 @@ This plugin uses [bStats](https://bstats.org/plugin/bukkit/QuickTrash/33565) to 
 
 ## Requirements
 
-- PaperMC 26.2 or compatible fork (Purpur, etc.)
+- PaperMC 26.3 (Build 206 or newer) or compatible fork (Purpur, etc.)
 - Java 25
 - No additional dependencies
 
@@ -105,7 +105,7 @@ cd QuickTrash
 ./gradlew build
 ```
 
-The compiled plugin will be in `build/libs/QuickTrash-1.0.1.jar`.
+The compiled plugin will be in `build/libs/QuickTrash-2.0.0.jar`.
 
 ---
 *QuickTrash is open source and maintained by [vwtfafa](https://github.com/vwtfafa).*

@@ -6,6 +6,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import io.papermc.paper.datacomponent.DataComponentType;
+import io.papermc.paper.datacomponent.DataComponentTypes;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
@@ -16,15 +18,40 @@ public final class ValuableItemChecker {
     public ValuableItemChecker(TrashManager manager) { this.manager = manager; }
 
     public boolean isValuable(ItemStack item) {
-        if (item == null || item.getType().isAir()) return false;
+        if (item == null || item.isEmpty()) return false;
         if (cachedRule().matches(item.getType())) return true;
+        if (hasValuableDataComponents(item)) return true;
         var meta = item.getItemMeta();
         if (meta == null) return false;
         return meta.hasCustomName()
             || meta.hasEnchants()
             || meta.hasCustomModelDataComponent()
-            || !meta.getPersistentDataContainer().getKeys().isEmpty()
+            || !meta.getPersistentDataContainer().isEmpty()
             || item.getType() == Material.ENCHANTED_GOLDEN_APPLE;
+    }
+
+    static boolean hasValuableDataComponents(ItemStack item) {
+        return hasValuableDataComponents(item, Set.of(
+            DataComponentTypes.CUSTOM_NAME,
+            DataComponentTypes.CUSTOM_MODEL_DATA,
+            DataComponentTypes.ENCHANTMENTS,
+            DataComponentTypes.STORED_ENCHANTMENTS,
+            DataComponentTypes.CONTAINER,
+            DataComponentTypes.CONTAINER_LOOT,
+            DataComponentTypes.POTION_CONTENTS,
+            DataComponentTypes.WRITTEN_BOOK_CONTENT,
+            DataComponentTypes.TRIM,
+            DataComponentTypes.FIREWORKS,
+            DataComponentTypes.FIREWORK_EXPLOSION,
+            DataComponentTypes.PROFILE,
+            DataComponentTypes.CHARGED_PROJECTILES,
+            DataComponentTypes.BANNER_PATTERNS,
+            DataComponentTypes.MAP_ID
+        ));
+    }
+
+    static boolean hasValuableDataComponents(ItemStack item, Set<DataComponentType> components) {
+        return components.stream().anyMatch(item::isDataOverridden);
     }
 
     public void invalidate() { cachedRule.set(null); }

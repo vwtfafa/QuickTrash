@@ -1,5 +1,5 @@
 branches:
   main:
     type: stable
-    paper: "26.2"
+    paper: "26.3"
     java: "25"
