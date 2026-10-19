@@ -93,7 +93,7 @@ This plugin uses [bStats](https://bstats.org/plugin/bukkit/QuickTrash/33565) to 
 
 ## Requirements
 
-- PaperMC 26.3 (Build 190 or newer) or compatible fork (Purpur, etc.)
+- PaperMC 26.3 (Build 206 or newer) or compatible fork (Purpur, etc.)
 - Java 25
 - No additional dependencies
 

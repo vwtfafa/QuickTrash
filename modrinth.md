@@ -83,7 +83,7 @@ valuable-items:
 
 ## Requirements
 
-- **PaperMC** 26.3 (Build 190 or newer) or a compatible fork (Purpur, etc.)
+- **PaperMC** 26.3 (Build 206 or newer) or a compatible fork (Purpur, etc.)
 - **Java** 25
 - No additional dependencies required
 
