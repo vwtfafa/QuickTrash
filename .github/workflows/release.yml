@@ -121,6 +121,27 @@ jobs:
 
           echo "Found: $ARTIFACT"
 
+          PLUGIN_YML=$(unzip -p "$ARTIFACT" plugin.yml)
+
+          if [ -z "$PLUGIN_YML" ]; then
+            echo "ERROR: plugin.yml is missing or empty inside the artifact:"
+            unzip -l "$ARTIFACT"
+            exit 1
+          fi
+
+          if ! grep -q "version: '${VERSION}'" <<< "$PLUGIN_YML"; then
+            echo "ERROR: plugin.yml does not declare version ${VERSION}:"
+            echo "$PLUGIN_YML"
+            exit 1
+          fi
+
+          if ! unzip -l "$ARTIFACT" | grep -q "shaded/bstats"; then
+            echo "ERROR: shaded bStats classes are missing; the artifact is not the shadow jar"
+            exit 1
+          fi
+
+          echo "Verified plugin.yml version and shaded bStats classes"
+
       - name: Prepare release body
         env:
           VERSION: ${{ steps.version.outputs.version }}
