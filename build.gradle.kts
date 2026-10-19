@@ -62,6 +62,11 @@ tasks.shadowJar {
     relocate("org.bstats", "${project.group}.shaded.bstats")
 }
 
+tasks.jar {
+    // Keep the plain jar out of the release path; the shaded jar is the artifact that ships.
+    archiveClassifier.set("plain")
+}
+
 tasks.build {
     dependsOn(tasks.shadowJar)
 }
