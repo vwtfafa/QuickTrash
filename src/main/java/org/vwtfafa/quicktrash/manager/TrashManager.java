@@ -25,10 +25,11 @@ import org.vwtfafa.quicktrash.gui.TrashLayout;
 import org.vwtfafa.quicktrash.model.TrashSession;
 import org.vwtfafa.quicktrash.model.UndoBuffer;
 import org.vwtfafa.quicktrash.util.PersistenceFiles;
+import org.vwtfafa.quicktrash.util.RowsResolver;
 import org.vwtfafa.quicktrash.util.Sounds;
 
 public final class TrashManager {
-    private static final long FLUSH_DEBOUNCE_MS = 3_000L;
+    static final long FLUSH_DEBOUNCE_MS = 3_000L;
 
     private final QuickTrash plugin;
     private final Map<UUID, TrashSession> sessions = new HashMap<>();
@@ -41,14 +42,21 @@ public final class TrashManager {
     private File dataFile;
     private ScheduledTask task;
     private ItemStack cachedFiller;
-    private TrashLayout layout = TrashLayout.fromRows(TrashLayout.DEFAULT_ROWS);
+    private int defaultRows = TrashLayout.DEFAULT_ROWS;
 
     public TrashManager(QuickTrash plugin) { this.plugin = plugin; }
     public QuickTrash plugin() { return plugin; }
-    public TrashLayout layout() { return layout; }
+    public TrashLayout layout() { return TrashLayout.fromRows(defaultRows); }
+    public boolean isDirty() { return dirty; }
+    public long lastFlushAt() { return lastFlushAt; }
+
+    public TrashLayout layoutFor(Player player) {
+        int rows = RowsResolver.resolve(player, defaultRows);
+        return TrashLayout.fromRows(rows);
+    }
 
     public void reloadSettings() {
-        layout = TrashLayout.fromRows(plugin.getConfig().getInt("trash.rows", TrashLayout.DEFAULT_ROWS));
+        defaultRows = plugin.getConfig().getInt("trash.rows", TrashLayout.DEFAULT_ROWS);
         cachedFiller = null;
         Sounds.invalidate();
     }
@@ -62,8 +70,9 @@ public final class TrashManager {
         for (String key : root.getKeys(false)) {
             try {
                 UUID id = UUID.fromString(key);
-                TrashSession session = new TrashSession(id, root.getLong(key + ".expires-at"), layout.contentSize());
-                ItemStack[] items = readItems(root.get(key + ".items"), layout.contentSize());
+                int size = TrashLayout.fromRows(defaultRows).contentSize();
+                TrashSession session = new TrashSession(id, root.getLong(key + ".expires-at"), size);
+                ItemStack[] items = readItems(root.get(key + ".items"), size);
                 for (int slot = 0; slot < Math.min(session.size(), items.length); slot++) {
                     if (items[slot] != null && !items[slot].isEmpty()) session.setItem(slot, items[slot]);
                 }
@@ -118,10 +127,11 @@ public final class TrashManager {
 
     public void open(Player player) {
         if (!canOpen(player)) return;
+        TrashLayout playerLayout = layoutFor(player);
         TrashSession session = sessions.computeIfAbsent(
-            player.getUniqueId(), id -> new TrashSession(id, expiryFromNow(), layout.contentSize()));
-        if (session.size() != layout.contentSize()) {
-            TrashSession resized = new TrashSession(player.getUniqueId(), expiryFromNow(), layout.contentSize());
+            player.getUniqueId(), id -> new TrashSession(id, expiryFromNow(), playerLayout.contentSize()));
+        if (session.size() != playerLayout.contentSize()) {
+            TrashSession resized = new TrashSession(player.getUniqueId(), expiryFromNow(), playerLayout.contentSize());
             ItemStack[] old = session.copyItems();
             for (int slot = 0; slot < Math.min(old.length, resized.size()); slot++) resized.setItem(slot, old[slot]);
             sessions.put(player.getUniqueId(), resized);
@@ -129,11 +139,11 @@ public final class TrashManager {
         }
         session.refresh(expiryFromNow());
         markDirty();
-        TrashHolder holder = new TrashHolder(player.getUniqueId(), layout);
-        Inventory inventory = Bukkit.createInventory(holder, layout.inventorySize(), title());
+        TrashHolder holder = new TrashHolder(player.getUniqueId(), playerLayout);
+        Inventory inventory = Bukkit.createInventory(holder, playerLayout.inventorySize(), title());
         holder.inventory(inventory);
         for (int slot = 0; slot < session.size(); slot++) inventory.setItem(slot, session.itemAt(slot));
-        decorate(inventory, clearSeconds());
+        decorate(inventory, playerLayout, clearSeconds());
         player.openInventory(inventory);
         ensureTimer();
         Sounds.play(plugin, player, "gui.sounds.open");
@@ -142,19 +152,22 @@ public final class TrashManager {
     }
 
     public void openFor(Player viewer, UUID targetId) {
-        TrashSession session = sessions.computeIfAbsent(targetId, id -> new TrashSession(id, expiryFromNow(), layout.contentSize()));
+        Player target = Bukkit.getPlayer(targetId);
+        TrashLayout targetLayout = target != null ? layoutFor(target) : TrashLayout.fromRows(defaultRows);
+        TrashSession session = sessions.computeIfAbsent(
+            targetId, id -> new TrashSession(id, expiryFromNow(), targetLayout.contentSize()));
         session.refresh(expiryFromNow());
         markDirty();
-        TrashHolder holder = new TrashHolder(targetId, layout);
-        Inventory inventory = Bukkit.createInventory(holder, layout.inventorySize(), title());
+        TrashHolder holder = new TrashHolder(targetId, targetLayout);
+        Inventory inventory = Bukkit.createInventory(holder, targetLayout.inventorySize(), title());
         holder.inventory(inventory);
         for (int slot = 0; slot < session.size(); slot++) inventory.setItem(slot, session.itemAt(slot));
-        decorate(inventory, clearSeconds());
+        decorate(inventory, targetLayout, clearSeconds());
         viewer.openInventory(inventory);
         ensureTimer();
     }
 
-    private void decorate(Inventory inventory, long seconds) {
+    private void decorate(Inventory inventory, TrashLayout layout, long seconds) {
         ItemStack filler = fillerItem();
         for (int slot = layout.contentSize(); slot < layout.inventorySize(); slot++) {
             inventory.setItem(slot, filler);
@@ -208,7 +221,7 @@ public final class TrashManager {
         TrashSession session = sessions.get(player.getUniqueId());
         if (session == null) return;
         TrashLayout openLayout = inventory.getHolder() instanceof TrashHolder holder
-            ? holder.layout() : layout;
+            ? holder.layout() : TrashLayout.fromRows(defaultRows);
         for (int slot = 0; slot < Math.min(session.size(), openLayout.contentSize()); slot++) {
             session.setItem(slot, inventory.getItem(slot));
         }
@@ -227,7 +240,7 @@ public final class TrashManager {
             return -1;
         }
         int contentSize = top.getHolder() instanceof TrashHolder holder
-            ? holder.layout().contentSize() : layout.contentSize();
+            ? holder.layout().contentSize() : TrashLayout.fromRows(defaultRows).contentSize();
         int remaining = item.getAmount();
         int maxStack = item.getMaxStackSize();
         for (int slot = 0; slot < contentSize && remaining > 0; slot++) {
@@ -253,20 +266,45 @@ public final class TrashManager {
 
     public void deleteItem(Player player, Inventory top, int slot, ItemStack item) {
         top.setItem(slot, null);
-        plugin.stats().add(player.getUniqueId(), item.getAmount());
+        recordPermanentDelete(player, item, "DELETE");
         snapshot(player, top);
         Sounds.play(plugin, player, "gui.sounds.delete");
+    }
+
+    /**
+     * Bookkeeping for a permanent delete: stats, optional staff recycle, dirty flag.
+     * Extracted so persistence side effects can be verified without a live inventory click.
+     */
+    public void recordPermanentDelete(Player player, ItemStack item, String reason) {
+        if (item == null || item.isEmpty()) return;
+        plugin.stats().add(player.getUniqueId(), item.getAmount());
+        if (plugin.valuableItems().isValuable(item)) {
+            plugin.recycle().record(player.getUniqueId(), player.getName(), item, reason);
+        }
+        markDirty();
+    }
+
+    private void recordValuableContents(UUID playerId, String playerName, ItemStack[] items, String reason) {
+        for (ItemStack item : items) {
+            if (item != null && !item.isEmpty() && plugin.valuableItems().isValuable(item)) {
+                plugin.recycle().record(playerId, playerName, item, reason);
+            }
+        }
     }
 
     public void clearNow(Player player, Inventory top, boolean manual) {
         TrashSession session = sessions.get(player.getUniqueId());
         if (session == null) return;
+        TrashLayout openLayout = top.getHolder() instanceof TrashHolder holder
+            ? holder.layout() : TrashLayout.fromRows(defaultRows);
         syncFromInventory(session, top);
-        storeUndo(player.getUniqueId(), session.copyItems());
+        ItemStack[] snapshotItems = session.copyItems();
+        storeUndo(player.getUniqueId(), snapshotItems);
+        recordValuableContents(player.getUniqueId(), player.getName(), snapshotItems, manual ? "CLEAR" : "EXPIRE");
         int count = session.itemCount();
         if (count > 0) plugin.stats().add(player.getUniqueId(), count);
         session.clear();
-        for (int slot = 0; slot < layout.contentSize() && slot < top.getSize(); slot++) top.setItem(slot, null);
+        for (int slot = 0; slot < openLayout.contentSize() && slot < top.getSize(); slot++) top.setItem(slot, null);
         sessions.remove(player.getUniqueId());
         lastInfoSeconds.remove(player.getUniqueId());
         markDirty();
@@ -282,8 +320,10 @@ public final class TrashManager {
             plugin.messages().send(player, "undo-empty");
             return false;
         }
+        TrashLayout playerLayout = top.getHolder() instanceof TrashHolder holder
+            ? holder.layout() : layoutFor(player);
         TrashSession session = sessions.computeIfAbsent(
-            player.getUniqueId(), id -> new TrashSession(id, expiryFromNow(), layout.contentSize()));
+            player.getUniqueId(), id -> new TrashSession(id, expiryFromNow(), playerLayout.contentSize()));
         ItemStack[] items = buffer.items();
         for (int slot = 0; slot < Math.min(session.size(), items.length); slot++) {
             session.setItem(slot, items[slot]);
@@ -377,8 +417,7 @@ public final class TrashManager {
             viewer.getScheduler().run(plugin, ignored -> {
                 Inventory open = openTrash(viewer, id);
                 if (open != null) syncFromInventory(session, open);
-                storeUndo(id, session.copyItems());
-                plugin.stats().add(id, session.itemCount());
+                recordExpiredContents(viewer, session);
                 if (open != null) {
                     viewer.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
                     plugin.messages().send(viewer, "trash-cleared");
@@ -386,13 +425,38 @@ public final class TrashManager {
             }, null);
             return;
         }
-        storeUndo(id, session.copyItems());
+        ItemStack[] items = session.copyItems();
+        storeUndo(id, items);
+        recordValuableContents(id, "offline", items, "EXPIRE");
         plugin.stats().add(id, session.itemCount());
+        markDirty();
+    }
+
+    private void recordExpiredContents(Player viewer, TrashSession session) {
+        ItemStack[] items = session.copyItems();
+        storeUndo(session.playerId(), items);
+        recordValuableContents(viewer.getUniqueId(), viewer.getName(), items, "EXPIRE");
+        plugin.stats().add(session.playerId(), session.itemCount());
+        markDirty();
     }
 
     private void updateInfoIfOpen(Player viewer, UUID id, long seconds) {
         Inventory open = openTrash(viewer, id);
-        if (open != null) open.setItem(layout.infoSlot(), infoItem(seconds));
+        if (open == null) return;
+        TrashLayout openLayout = open.getHolder() instanceof TrashHolder holder
+            ? holder.layout() : TrashLayout.fromRows(defaultRows);
+        open.setItem(openLayout.infoSlot(), infoItem(seconds));
+    }
+
+    /** Visible for tests: whether a flush should run for the current dirty/debounce state. */
+    public static boolean shouldFlush(boolean dirty, boolean force, long now, long lastFlushAt) {
+        if (force) return true;
+        return dirty && now - lastFlushAt >= FLUSH_DEBOUNCE_MS;
+    }
+
+    /** Visible for tests: whether a session should expire at {@code now}. */
+    public static boolean isExpired(long expiresAt, long now) {
+        return expiresAt <= now;
     }
 
     private static Inventory openTrash(Player viewer, UUID id) {

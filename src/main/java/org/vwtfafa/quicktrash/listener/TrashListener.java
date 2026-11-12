@@ -132,11 +132,14 @@ public final class TrashListener implements Listener {
     }
 
     private boolean requiresConfirmation(Player player, byte inventoryKind, int slot, ItemStack item) {
-        if (player.hasPermission("quicktrash.bypass")) return false;
-        boolean confirmAll = plugin.getConfig().getBoolean("trash.confirm-all-deletes", false);
-        boolean valuableEnabled = plugin.getConfig().getBoolean("valuable-items.enabled", true)
-            && plugin.getConfig().getBoolean("valuable-items.require-confirmation", true);
-        boolean needsConfirm = confirmAll || (valuableEnabled && plugin.valuableItems().isValuable(item));
+        boolean needsConfirm = org.vwtfafa.quicktrash.util.ConfirmationPolicy.requires(
+            player.hasPermission("quicktrash.bypass"),
+            plugin.preferences().isConfirmEnabled(player.getUniqueId()),
+            plugin.getConfig().getBoolean("trash.confirm-all-deletes", false),
+            plugin.getConfig().getBoolean("valuable-items.enabled", true),
+            plugin.getConfig().getBoolean("valuable-items.require-confirmation", true),
+            plugin.valuableItems().isValuable(item)
+        );
         if (!needsConfirm) return false;
         int timeout = Math.max(1, plugin.getConfig().getInt("valuable-items.confirmation-timeout-seconds", 5));
         PendingDeletion deletion = new PendingDeletion(inventoryKind, slot, item.clone());

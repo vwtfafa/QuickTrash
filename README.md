@@ -1,12 +1,14 @@
 # QuickTrash
 
-QuickTrash 2.1.0 is a lightweight Paper 26.3 plugin that provides a temporary trash inventory for players.
+QuickTrash 2.2.0 is a lightweight Paper 26.3 plugin that provides a temporary trash inventory for players.
 
 ## Features
 
 - Configurable trash inventory (`/trash`, aliases like `/bin`)
+- Per-player confirm toggle (`/trash confirm on|off`) and permission-based rows (`quicktrash.rows.N`)
 - Session persistence with NBT item blobs and debounced YAML flush
 - Shift-click delete, clear-all button, undo after clear
+- Staff recycle history for valuable deletes (`/quicktrash history|restore`)
 - Valuable-item Paper dialogs (optional confirm-all)
 - Blocked materials, per-world disable, open cooldown
 - Admin open/clear for other players
@@ -27,11 +29,14 @@ QuickTrash 2.1.0 is a lightweight Paper 26.3 plugin that provides a temporary tr
 | Command | Description | Permission |
 |---------|-------------|------------|
 | `/trash` | Open your trash inventory | `quicktrash.use` |
+| `/trash confirm [on\|off]` | Toggle valuable confirmations | `quicktrash.confirm.toggle` |
 | `/quicktrash version` | Display plugin version | — |
 | `/quicktrash stats` | Display deleted-item stats | — |
-| `/quicktrash reload` | Reload configuration | `quicktrash.admin` |
+| `/quicktrash reload` | Reload + migrate config, refresh aliases | `quicktrash.admin` |
 | `/quicktrash clear [player]` | Clear trash (own or other) | `quicktrash.use` / `quicktrash.admin.others` |
 | `/quicktrash open <player>` | Inspect another player's trash | `quicktrash.admin.others` |
+| `/quicktrash history [player] [page]` | Staff recycle history | `quicktrash.admin.recycle` |
+| `/quicktrash restore <id>` | Restore a recycle entry to your inventory | `quicktrash.admin.recycle` |
 
 ### Placeholders (PlaceholderAPI)
 
@@ -76,7 +81,7 @@ cd QuickTrash
 ./gradlew build
 ```
 
-The compiled plugin will be in `build/libs/QuickTrash-2.1.0.jar`.
+The compiled plugin will be in `build/libs/QuickTrash-2.2.0.jar`.
 
 ---
 *QuickTrash is open source and maintained by [vwtfafa](https://github.com/vwtfafa).*

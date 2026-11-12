@@ -1,4 +1,4 @@
-config-version: 2
+config-version: 3
 metrics:
   enabled: true
 update-checker:
@@ -16,6 +16,10 @@ trash:
     seconds: 15
   confirm-all-deletes: false
   blocked-materials: []
+staff-recycle:
+  enabled: true
+  max-entries: 200
+  retention-hours: 72
 valuable-items:
   enabled: true
   require-confirmation: true
@@ -39,6 +43,11 @@ messages:
   confirmation-move-body: '<gray>Move {amount}x {item} into temporary trash within {seconds}s?'
   confirmation-confirm: '<red>Confirm'
   confirmation-cancel: '<gray>Cancel'
+  confirm-status-on: '<gray>Valuable confirmations are <green>on<gray>.'
+  confirm-status-off: '<gray>Valuable confirmations are <red>off<gray>.'
+  confirm-enabled: '<green>Valuable confirmations enabled.'
+  confirm-disabled: '<yellow>Valuable confirmations disabled.'
+  confirm-usage: '<gray>Usage: <white>/trash confirm [on|off]'
   no-permission: '<red>You do not have permission.'
   no-space: '<red>Your trash is full.'
   blocked-item: '<red>That item cannot be moved into trash.'
@@ -48,13 +57,19 @@ messages:
   version: '<gray>QuickTrash <white>{version}'
   stats: '<gray>Your deleted items: <white>{player}<gray>, server total: <white>{total}'
   player-only: '<red>Only players can use this command.'
-  unknown-subcommand: '<red>Unknown subcommand. Available: <white>stats, version, reload, clear, open'
+  unknown-subcommand: '<red>Unknown subcommand. Available: <white>stats, version, reload, clear, open, history, restore'
   undo-empty: '<red>Nothing to undo.'
   undo-success: '<green>Restored {amount} items to trash.'
   update-available: '<yellow>Update available: <white>{version}'
   player-not-found: '<red>Player not found.'
   admin-cleared: '<green>Cleared trash for <white>{player}<green>.'
   admin-opened: '<gray>Opened trash for <white>{player}<gray>.'
+  recycle-empty: '<gray>No recycle history entries.'
+  recycle-header: '<gray>Staff recycle history (page <white>{page}<gray>):'
+  recycle-line: '<dark_gray>#<white>{id} <gray>{time} <white>{player} <gray>{reason} <red>{amount}x {item}'
+  recycle-not-found: '<red>Recycle entry not found.'
+  recycle-restore-usage: '<gray>Usage: <white>/quicktrash restore <id>'
+  recycle-restored: '<green>Restored #<white>{id}<green>: <white>{amount}x {item}'
 gui:
   title: '<dark_gray>QuickTrash'
   info-name: '<aqua>QuickTrash'

@@ -11,6 +11,9 @@ permissions:
   quicktrash.use:
     description: Allows use of /trash.
     default: true
+  quicktrash.confirm.toggle:
+    description: Allows toggling valuable confirmations with /trash confirm.
+    default: true
   quicktrash.admin:
     description: Allows QuickTrash administration commands.
     default: op
@@ -20,3 +23,21 @@ permissions:
   quicktrash.admin.others:
     description: Allows opening or clearing another player's trash.
     default: op
+  quicktrash.admin.recycle:
+    description: Allows viewing and restoring staff recycle history.
+    default: op
+  quicktrash.rows.1:
+    description: Forces a 1-row trash inventory.
+    default: false
+  quicktrash.rows.2:
+    description: Forces a 2-row trash inventory.
+    default: false
+  quicktrash.rows.3:
+    description: Forces a 3-row trash inventory.
+    default: false
+  quicktrash.rows.4:
+    description: Forces a 4-row trash inventory.
+    default: false
+  quicktrash.rows.5:
+    description: Forces a 5-row trash inventory.
+    default: false
