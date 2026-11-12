@@ -2,8 +2,11 @@ name: QuickTrash
 version: '${version}'
 main: org.vwtfafa.quicktrash.QuickTrash
 api-version: '26.3'
+folia-supported: true
 author: QuickTrash
 description: A fast, safe player trash inventory.
+softdepend:
+  - PlaceholderAPI
 permissions:
   quicktrash.use:
     description: Allows use of /trash.
@@ -13,4 +16,7 @@ permissions:
     default: op
   quicktrash.bypass:
     description: Bypasses valuable item confirmations.
+    default: op
+  quicktrash.admin.others:
+    description: Allows opening or clearing another player's trash.
     default: op

@@ -1,23 +1,24 @@
 # QuickTrash
 
-QuickTrash 2.0.0 is a lightweight Paper 26.3 plugin that provides a temporary trash inventory for players.
+QuickTrash 2.1.0 is a lightweight Paper 26.3 plugin that provides a temporary trash inventory for players.
 
 ## Features
 
-- 18-slot trash inventory accessible via `/trash`
-- Items persist during session and auto-delete after timeout
-- Shift-click for instant deletion
-- Valuable item protection with confirmation requirement
-- bStats integration for anonymous usage tracking
-- Configurable timeout, GUI, and valuable items list
+- Configurable trash inventory (`/trash`, aliases like `/bin`)
+- Session persistence with NBT item blobs and debounced YAML flush
+- Shift-click delete, clear-all button, undo after clear
+- Valuable-item Paper dialogs (optional confirm-all)
+- Blocked materials, per-world disable, open cooldown
+- Admin open/clear for other players
+- Folia-supported schedulers, update checker, PlaceholderAPI hooks, bStats charts
 
 ## Installation
 
 1. Download the latest release from [GitHub Releases](https://github.com/vwtfafa/QuickTrash/releases)
 2. Place the `.jar` file in your server's `plugins/` directory
-3. Restart your server (or reload the plugin)
-4. Edit `plugins/QuickTrash/config.yml` to adjust settings as needed
-5. Restart/reload again to apply changes
+3. Restart your server
+4. Edit `plugins/QuickTrash/config.yml` as needed
+5. Run `/quicktrash reload` (or restart) to apply changes
 
 ## Usage
 
@@ -25,77 +26,47 @@ QuickTrash 2.0.0 is a lightweight Paper 26.3 plugin that provides a temporary tr
 
 | Command | Description | Permission |
 |---------|-------------|------------|
-| `/trash` | Open the trash inventory | `quicktrash.use` |
+| `/trash` | Open your trash inventory | `quicktrash.use` |
 | `/quicktrash version` | Display plugin version | — |
 | `/quicktrash stats` | Display deleted-item stats | — |
 | `/quicktrash reload` | Reload configuration | `quicktrash.admin` |
+| `/quicktrash clear [player]` | Clear trash (own or other) | `quicktrash.use` / `quicktrash.admin.others` |
+| `/quicktrash open <player>` | Inspect another player's trash | `quicktrash.admin.others` |
+
+### Placeholders (PlaceholderAPI)
+
+| Placeholder | Description |
+|-------------|-------------|
+| `%quicktrash_player%` / `%quicktrash_deleted%` | Player deleted-item count |
+| `%quicktrash_total%` | Server total deleted items |
+| `%quicktrash_sessions%` | Active trash sessions |
 
 ### Behavior
 
-- Trash inventory contains 18 slots for temporary item storage
-- Contents are saved to `plugins/QuickTrash/trash-data.yml` while the player is online; the items are stored as NBT blobs so they survive server and data-version updates
-- Items are automatically deleted after the configured timeout (default: 30 seconds)
-- Shift-clicking an item deletes it immediately without confirmation
-- Valuable items use a Paper confirmation dialog before being moved to trash or permanently deleted
-- Valuable items include: enchanted items, named items, custom model data, persistent data, and materials listed in config
-
-## Configuration
-
-The `config.yml` file generates automatically with these options. On upgrades, missing default keys are added while existing values are preserved; `config-version` tracks the schema:
-
-```yaml
-metrics:
-  enabled: true
-
-# Time in seconds before trash contents are auto-cleared
-trash:
-  auto-clear-seconds: 30
-
-# GUI settings (MiniMessage format, {seconds} is replaced in info-lore)
-gui:
-  title: '<dark_gray>QuickTrash'
-  info-name: '<aqua>QuickTrash'
-  sounds:
-    open: block.ender_chest.open
-    delete: block.lava.extinguish
-  info-lore:
-    - '<gray>Items are deleted after <white>{seconds}s<gray>.'
-    - '<gray>Shift-click an item to delete it now.'
-
-# Valuable item protection (enchanted/named/custom-model/persistent data always count,
-# materials below additionally depend on mode: WHITELIST or BLACKLIST)
-valuable-items:
-  enabled: true
-  require-confirmation: true
-  # Confirmation dialog action expires after this many seconds
-  confirmation-timeout-seconds: 5
-  mode: WHITELIST
-  materials:
-    - DIAMOND
-    - EMERALD
-    - NETHERITE_INGOT
-    - NETHERITE_SWORD
-    - NETHERITE_PICKAXE
-    - ENCHANTED_GOLDEN_APPLE
-```
+- Content rows are configurable (`trash.rows`, default 2 → 18 slots) plus a control row (undo / info / clear)
+- Contents are saved to `plugins/QuickTrash/trash-data.yml` as NBT blobs
+- Items auto-delete after the configured timeout; undo restores the last clear briefly
+- Shift-click deletes immediately (unless confirm-all / valuable rules apply)
+- Valuable items use a Paper confirmation dialog
 
 ## Permissions
 
 | Permission | Description |
 |------------|-------------|
-| `quicktrash.use` | Allows using `/trash` command |
-| `quicktrash.admin` | Allows reloading configuration |
-| `quicktrash.bypass` | Bypasses valuable item confirmations |
+| `quicktrash.use` | Use `/trash` |
+| `quicktrash.admin` | Reload configuration |
+| `quicktrash.admin.others` | Open/clear other players' trash |
+| `quicktrash.bypass` | Bypass valuable confirmations |
 
 ## Metrics
 
-This plugin uses [bStats](https://bstats.org/plugin/bukkit/QuickTrash/33565) to collect anonymous usage statistics. No personal data is collected. You can opt-out per-plugin via `metrics.enabled: false` in `plugins/QuickTrash/config.yml` or globally by disabling bStats in your server's `plugins/bStats/config.yml`.
+This plugin uses [bStats](https://bstats.org/plugin/bukkit/QuickTrash/33565). Opt out via `metrics.enabled: false` or the global bStats config.
 
 ## Requirements
 
-- PaperMC 26.3 (Build 206 or newer) or compatible fork (Purpur, etc.)
+- PaperMC 26.3 (Build 249 or newer recommended) or compatible fork
 - Java 25
-- No additional dependencies
+- Optional: PlaceholderAPI
 
 ## Building from Source
 
@@ -105,7 +76,7 @@ cd QuickTrash
 ./gradlew build
 ```
 
-The compiled plugin will be in `build/libs/QuickTrash-2.0.0.jar`.
+The compiled plugin will be in `build/libs/QuickTrash-2.1.0.jar`.
 
 ---
 *QuickTrash is open source and maintained by [vwtfafa](https://github.com/vwtfafa).*

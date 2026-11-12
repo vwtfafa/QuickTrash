@@ -11,23 +11,23 @@ import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
-import org.vwtfafa.quicktrash.QuickTrash;
-import org.vwtfafa.quicktrash.gui.TrashHolder;
-import org.vwtfafa.quicktrash.manager.TrashManager;
-import org.vwtfafa.quicktrash.model.TrashSession;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.vwtfafa.quicktrash.QuickTrash;
+import org.vwtfafa.quicktrash.gui.TrashHolder;
+import org.vwtfafa.quicktrash.gui.TrashLayout;
+import org.vwtfafa.quicktrash.manager.TrashManager;
 
 public final class TrashListener implements Listener {
     private final QuickTrash plugin;
@@ -42,37 +42,63 @@ public final class TrashListener implements Listener {
     public void onClick(InventoryClickEvent event) {
         Inventory top = event.getView().getTopInventory();
         if (!(top.getHolder() instanceof TrashHolder holder)) return;
-        if (!(event.getWhoClicked() instanceof Player player) || !holder.playerId().equals(player.getUniqueId())) return;
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!holder.playerId().equals(player.getUniqueId())) {
+            event.setCancelled(true);
+            return;
+        }
+        TrashLayout layout = holder.layout();
+
         if (event.getClick().isKeyboardClick() || event.getClick() == ClickType.DOUBLE_CLICK
             || event.getClick() == ClickType.SWAP_OFFHAND || event.getClick().isCreativeAction()
             || event.getClick() == ClickType.CONTROL_DROP) {
             event.setCancelled(true);
             return;
         }
+
         if (event.getClickedInventory() == top) {
-            if (event.getSlot() >= TrashSession.SIZE || event.getClick().isShiftClick()) {
+            int slot = event.getSlot();
+            if (!layout.isContentSlot(slot)) {
                 event.setCancelled(true);
+                if (slot == layout.clearSlot()) {
+                    manager.clearNow(player, top, true);
+                } else if (slot == layout.undoSlot()) {
+                    manager.undo(player, top);
+                }
+                return;
             }
-            if (event.getSlot() < TrashSession.SIZE && event.getClick().isShiftClick()) deleteFromTrash(player, top, event.getSlot(), event.getCurrentItem());
+            if (event.getClick().isShiftClick()) {
+                event.setCancelled(true);
+                deleteFromTrash(player, top, slot, event.getCurrentItem());
+            } else {
+                player.getScheduler().run(plugin,
+                    ignored -> manager.markInventoryChanged(player, top), null);
+            }
             return;
         }
+
         if (event.getClickedInventory() == event.getView().getBottomInventory() && event.getClick().isShiftClick()) {
             event.setCancelled(true);
             moveFromPlayer(player, event);
+            return;
+        }
+
+        if (event.getClickedInventory() == event.getView().getBottomInventory()) {
+            // Cursor deposit into trash happens via vanilla; refresh after the click.
+            player.getScheduler().run(plugin,
+                ignored -> manager.markInventoryChanged(player, top), null);
         }
     }
 
     private void deleteFromTrash(Player player, Inventory top, int slot, ItemStack item) {
         if (item == null || item.isEmpty()) return;
         if (requiresConfirmation(player, PendingDeletion.TRASH_INVENTORY, slot, item)) return;
-        deleteTrashItem(player, top, slot, item);
+        finishDelete(player, top, slot, item);
     }
 
-    private void deleteTrashItem(Player player, Inventory top, int slot, ItemStack item) {
-        top.setItem(slot, null);
-        plugin.stats().add(player.getUniqueId(), item.getAmount());
-        sendDeleted(player, item);
-        org.vwtfafa.quicktrash.util.Sounds.play(plugin, player, "gui.sounds.delete");
+    private void finishDelete(Player player, Inventory top, int slot, ItemStack item) {
+        manager.deleteItem(player, top, slot, item);
+        plugin.messages().actionbar(player, plugin.messages().deletedItems(item.getAmount(), item));
     }
 
     private void moveFromPlayer(Player player, InventoryClickEvent event) {
@@ -80,6 +106,10 @@ public final class TrashListener implements Listener {
         Inventory bottom = event.getView().getBottomInventory();
         if (event.getClickedInventory() != bottom || item == null || item.isEmpty()) return;
         int sourceSlot = event.getSlot();
+        if (plugin.valuableItems().isBlocked(item)) {
+            plugin.messages().send(player, "blocked-item");
+            return;
+        }
         if (requiresConfirmation(player, PendingDeletion.PLAYER_INVENTORY, sourceSlot, item)) return;
         moveItemIntoTrash(player, event.getView().getTopInventory(), bottom, sourceSlot, item);
     }
@@ -89,7 +119,7 @@ public final class TrashListener implements Listener {
         ItemStack deposit = item.clone();
         int leftover = manager.put(player, top, deposit);
         if (leftover == -1) {
-            plugin.messages().send(player, "no-space");
+            if (!plugin.valuableItems().isBlocked(item)) plugin.messages().send(player, "no-space");
             return;
         }
         ItemStack current = bottom.getItem(sourceSlot);
@@ -102,12 +132,16 @@ public final class TrashListener implements Listener {
     }
 
     private boolean requiresConfirmation(Player player, byte inventoryKind, int slot, ItemStack item) {
-        if (player.hasPermission("quicktrash.bypass") || !plugin.getConfig().getBoolean("valuable-items.enabled", true)
-            || !plugin.getConfig().getBoolean("valuable-items.require-confirmation", true)
-            || !plugin.valuableItems().isValuable(item)) return false;
+        if (player.hasPermission("quicktrash.bypass")) return false;
+        boolean confirmAll = plugin.getConfig().getBoolean("trash.confirm-all-deletes", false);
+        boolean valuableEnabled = plugin.getConfig().getBoolean("valuable-items.enabled", true)
+            && plugin.getConfig().getBoolean("valuable-items.require-confirmation", true);
+        boolean needsConfirm = confirmAll || (valuableEnabled && plugin.valuableItems().isValuable(item));
+        if (!needsConfirm) return false;
         int timeout = Math.max(1, plugin.getConfig().getInt("valuable-items.confirmation-timeout-seconds", 5));
         PendingDeletion deletion = new PendingDeletion(inventoryKind, slot, item.clone());
         showConfirmation(player, deletion, timeout);
+        plugin.metricsCounters().confirmShown();
         return true;
     }
 
@@ -174,33 +208,40 @@ public final class TrashListener implements Listener {
         ItemStack current = source.getItem(deletion.slot());
         if (current == null || current.getAmount() != deletion.item().getAmount() || !current.isSimilar(deletion.item())) return;
         if (deletion.inventory() == PendingDeletion.TRASH_INVENTORY) {
-            deleteTrashItem(player, top, deletion.slot(), current);
+            finishDelete(player, top, deletion.slot(), current);
         } else {
             moveItemIntoTrash(player, top, source, deletion.slot(), current);
         }
     }
 
-    private void sendDeleted(Player player, ItemStack item) {
-        plugin.messages().actionbar(player, plugin.messages().deletedItems(item.getAmount(), item));
-    }
-
     @EventHandler
     public void onClose(InventoryCloseEvent event) {
-        if (!(event.getInventory().getHolder() instanceof TrashHolder)) return;
-        if (event.getPlayer() instanceof Player player) manager.snapshot(player, event.getInventory());
+        if (!(event.getInventory().getHolder() instanceof TrashHolder holder)) return;
+        if (!(event.getPlayer() instanceof Player player)) return;
+        if (!holder.playerId().equals(player.getUniqueId())) return;
+        manager.snapshot(player, event.getInventory());
     }
 
     @EventHandler
     public void onDrag(InventoryDragEvent event) {
         if (!(event.getView().getTopInventory().getHolder() instanceof TrashHolder holder)) return;
-        if (!(event.getWhoClicked() instanceof Player player) || !holder.playerId().equals(player.getUniqueId())) return;
-        int topSize = event.getView().getTopInventory().getSize();
-        boolean touchesFiller = event.getRawSlots().stream().anyMatch(slot -> slot >= TrashSession.SIZE && slot < topSize);
-        if (touchesFiller) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!holder.playerId().equals(player.getUniqueId())) {
             event.setCancelled(true);
             return;
         }
-        boolean touchesTrash = event.getRawSlots().stream().anyMatch(slot -> slot < TrashSession.SIZE);
+        TrashLayout layout = holder.layout();
+        int topSize = event.getView().getTopInventory().getSize();
+        boolean touchesControl = false;
+        boolean touchesTrash = false;
+        for (int slot : event.getRawSlots()) {
+            if (slot >= layout.contentSize() && slot < topSize) touchesControl = true;
+            if (slot < layout.contentSize()) touchesTrash = true;
+        }
+        if (touchesControl) {
+            event.setCancelled(true);
+            return;
+        }
         if (touchesTrash) {
             player.getScheduler().run(plugin,
                 ignored -> manager.snapshot(player, event.getView().getTopInventory()), null);
@@ -209,7 +250,9 @@ public final class TrashListener implements Listener {
 
     @EventHandler
     public void onMove(InventoryMoveItemEvent event) {
-        if (event.getSource().getHolder() instanceof TrashHolder || event.getDestination().getHolder() instanceof TrashHolder) event.setCancelled(true);
+        if (event.getSource().getHolder() instanceof TrashHolder || event.getDestination().getHolder() instanceof TrashHolder) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
@@ -219,11 +262,13 @@ public final class TrashListener implements Listener {
 
     @EventHandler
     public void onDeath(PlayerDeathEvent event) { closeAndSnapshot(event.getEntity()); }
+
     @EventHandler
     public void onWorldChange(PlayerChangedWorldEvent event) { closeAndSnapshot(event.getPlayer()); }
 
     private void snapshotOpen(Player player) {
-        if (player.getOpenInventory().getTopInventory().getHolder() instanceof TrashHolder) {
+        if (player.getOpenInventory().getTopInventory().getHolder() instanceof TrashHolder holder
+            && holder.playerId().equals(player.getUniqueId())) {
             manager.snapshot(player, player.getOpenInventory().getTopInventory());
         }
     }

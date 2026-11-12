@@ -1,8 +1,21 @@
-config-version: 1
+config-version: 2
 metrics:
+  enabled: true
+update-checker:
   enabled: true
 trash:
   auto-clear-seconds: 30
+  rows: 2
+  open-cooldown-seconds: 0
+  aliases:
+    - bin
+    - disposal
+  disabled-worlds: []
+  undo:
+    enabled: true
+    seconds: 15
+  confirm-all-deletes: false
+  blocked-materials: []
 valuable-items:
   enabled: true
   require-confirmation: true
@@ -19,6 +32,7 @@ messages:
   prefix: '<dark_gray>[<aqua>QuickTrash<dark_gray>] '
   trash-opened: '<gray>Trash opened.'
   trash-cleared: '<green>Your trash was cleared.'
+  trash-cleared-manual: '<green>Trash emptied.'
   item-deleted: '<red>{amount}x {item} deleted.'
   valuable-warning: '<red>! This item is valuable!'
   confirmation-delete-body: '<gray>Delete {amount}x {item} permanently within {seconds}s?'
@@ -27,17 +41,34 @@ messages:
   confirmation-cancel: '<gray>Cancel'
   no-permission: '<red>You do not have permission.'
   no-space: '<red>Your trash is full.'
+  blocked-item: '<red>That item cannot be moved into trash.'
+  world-disabled: '<red>Trash is disabled in this world.'
+  cooldown: '<red>Wait {seconds}s before opening trash again.'
   reload: '<green>Configuration reloaded.'
   version: '<gray>QuickTrash <white>{version}'
   stats: '<gray>Your deleted items: <white>{player}<gray>, server total: <white>{total}'
   player-only: '<red>Only players can use this command.'
-  unknown-subcommand: '<red>Unknown subcommand. Available: <white>stats, version, reload'
+  unknown-subcommand: '<red>Unknown subcommand. Available: <white>stats, version, reload, clear, open'
+  undo-empty: '<red>Nothing to undo.'
+  undo-success: '<green>Restored {amount} items to trash.'
+  update-available: '<yellow>Update available: <white>{version}'
+  player-not-found: '<red>Player not found.'
+  admin-cleared: '<green>Cleared trash for <white>{player}<green>.'
+  admin-opened: '<gray>Opened trash for <white>{player}<gray>.'
 gui:
   title: '<dark_gray>QuickTrash'
   info-name: '<aqua>QuickTrash'
+  clear-name: '<red>Clear trash'
+  clear-lore:
+    - '<gray>Permanently delete all items now.'
+  undo-name: '<green>Undo clear'
+  undo-lore:
+    - '<gray>Restore the last auto/manual clear.'
   sounds:
     open: block.ender_chest.open
     delete: block.lava.extinguish
+    volume: 1.0
+    pitch: 1.0
   info-lore:
     - '<gray>Items are deleted after <white>{seconds}s<gray>.'
     - '<gray>Shift-click an item to delete it now.'

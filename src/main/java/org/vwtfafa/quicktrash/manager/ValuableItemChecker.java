@@ -1,5 +1,6 @@
 package org.vwtfafa.quicktrash.manager;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -12,49 +13,72 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 public final class ValuableItemChecker {
+    private static Set<DataComponentType> valuableComponents;
+
     private final TrashManager manager;
     private final AtomicReference<MaterialRule> cachedRule = new AtomicReference<>();
+    private final AtomicReference<Set<Material>> blockedMaterials = new AtomicReference<>(Set.of());
 
     public ValuableItemChecker(TrashManager manager) { this.manager = manager; }
 
     public boolean isValuable(ItemStack item) {
         if (item == null || item.isEmpty()) return false;
         if (cachedRule().matches(item.getType())) return true;
+        if (item.getType() == Material.ENCHANTED_GOLDEN_APPLE) return true;
         if (hasValuableDataComponents(item)) return true;
-        var meta = item.getItemMeta();
-        if (meta == null) return false;
-        return meta.hasCustomName()
-            || meta.hasEnchants()
-            || meta.hasCustomModelDataComponent()
-            || !meta.getPersistentDataContainer().isEmpty()
-            || item.getType() == Material.ENCHANTED_GOLDEN_APPLE;
+        return !item.getPersistentDataContainer().isEmpty();
+    }
+
+    public boolean isBlocked(ItemStack item) {
+        if (item == null || item.isEmpty()) return false;
+        return blockedMaterials.get().contains(item.getType());
     }
 
     static boolean hasValuableDataComponents(ItemStack item) {
-        return hasValuableDataComponents(item, Set.of(
-            DataComponentTypes.CUSTOM_NAME,
-            DataComponentTypes.CUSTOM_MODEL_DATA,
-            DataComponentTypes.ENCHANTMENTS,
-            DataComponentTypes.STORED_ENCHANTMENTS,
-            DataComponentTypes.CONTAINER,
-            DataComponentTypes.CONTAINER_LOOT,
-            DataComponentTypes.POTION_CONTENTS,
-            DataComponentTypes.WRITTEN_BOOK_CONTENT,
-            DataComponentTypes.TRIM,
-            DataComponentTypes.FIREWORKS,
-            DataComponentTypes.FIREWORK_EXPLOSION,
-            DataComponentTypes.PROFILE,
-            DataComponentTypes.CHARGED_PROJECTILES,
-            DataComponentTypes.BANNER_PATTERNS,
-            DataComponentTypes.MAP_ID
-        ));
+        return hasValuableDataComponents(item, valuableComponents());
     }
 
     static boolean hasValuableDataComponents(ItemStack item, Set<DataComponentType> components) {
         return components.stream().anyMatch(item::isDataOverridden);
     }
 
-    public void invalidate() { cachedRule.set(null); }
+    private static Set<DataComponentType> valuableComponents() {
+        if (valuableComponents == null) {
+            valuableComponents = Set.of(
+                DataComponentTypes.CUSTOM_NAME,
+                DataComponentTypes.CUSTOM_MODEL_DATA,
+                DataComponentTypes.ENCHANTMENTS,
+                DataComponentTypes.STORED_ENCHANTMENTS,
+                DataComponentTypes.CONTAINER,
+                DataComponentTypes.CONTAINER_LOOT,
+                DataComponentTypes.POTION_CONTENTS,
+                DataComponentTypes.WRITTEN_BOOK_CONTENT,
+                DataComponentTypes.TRIM,
+                DataComponentTypes.FIREWORKS,
+                DataComponentTypes.FIREWORK_EXPLOSION,
+                DataComponentTypes.PROFILE,
+                DataComponentTypes.CHARGED_PROJECTILES,
+                DataComponentTypes.BANNER_PATTERNS,
+                DataComponentTypes.MAP_ID
+            );
+        }
+        return valuableComponents;
+    }
+
+    public void invalidate() {
+        cachedRule.set(null);
+        reloadBlocked();
+    }
+
+    public void reloadBlocked() {
+        List<String> configured = manager.plugin().getConfig().getStringList("trash.blocked-materials");
+        Set<Material> materials = new HashSet<>();
+        for (String value : configured) {
+            Material material = parseMaterial(value);
+            if (material != null) materials.add(material);
+        }
+        blockedMaterials.set(Set.copyOf(materials));
+    }
 
     private MaterialRule cachedRule() {
         MaterialRule cached = cachedRule.get();
@@ -80,7 +104,7 @@ public final class ValuableItemChecker {
     private Material parseMaterial(String value) {
         Material material = Material.matchMaterial(value.toUpperCase(Locale.ROOT));
         if (material == null) {
-            manager.plugin().getLogger().warning("Unknown material in valuable-items.materials: " + value);
+            manager.plugin().getLogger().warning("Unknown material: " + value);
             return null;
         }
         return material;

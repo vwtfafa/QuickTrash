@@ -12,8 +12,14 @@ public final class TrashCommand implements BasicCommand {
 
     @Override public void execute(CommandSourceStack source, String[] args) {
         CommandSender sender = source.getSender();
-        if (!(sender instanceof Player player)) { plugin.messages().send(sender, "player-only"); return; }
-        if (!player.hasPermission("quicktrash.use")) { plugin.messages().send(player, "no-permission"); return; }
+        if (!(sender instanceof Player player)) {
+            plugin.messages().send(sender, "player-only");
+            return;
+        }
+        if (!player.hasPermission("quicktrash.use")) {
+            plugin.messages().send(player, "no-permission");
+            return;
+        }
         plugin.trash().open(player);
     }
 

@@ -5,13 +5,17 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 
 public final class TrashHolder implements InventoryHolder {
-    public static final int INVENTORY_SIZE = 27;
-    public static final int INFO_SLOT = 22;
     private final UUID playerId;
+    private final TrashLayout layout;
     private Inventory inventory;
 
-    public TrashHolder(UUID playerId) { this.playerId = playerId; }
+    public TrashHolder(UUID playerId, TrashLayout layout) {
+        this.playerId = playerId;
+        this.layout = layout;
+    }
+
     public UUID playerId() { return playerId; }
+    public TrashLayout layout() { return layout; }
     public void inventory(Inventory inventory) { this.inventory = inventory; }
     @Override public Inventory getInventory() { return inventory; }
 }

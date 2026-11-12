@@ -6,21 +6,26 @@ plugins {
 }
 
 group = "org.vwtfafa"
-version = "2.0.0"
+version = "2.1.0"
 
 repositories {
     maven {
         name = "papermc"
         url = uri("https://repo.papermc.io/repository/maven-public/")
     }
+    maven {
+        name = "extendedclip"
+        url = uri("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+    }
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:26.3.build.206-stable")
+    compileOnly("io.papermc.paper:paper-api:26.3.build.249-stable")
+    compileOnly("me.clip:placeholderapi:2.11.6")
 
     implementation("org.bstats:bstats-bukkit:3.2.1")
 
-    testImplementation("io.papermc.paper:paper-api:26.3.build.206-stable")
+    testImplementation("io.papermc.paper:paper-api:26.3.build.249-stable")
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
     testImplementation("org.mockito:mockito-core:5.24.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -72,7 +77,7 @@ tasks.build {
 }
 
 checkstyle {
-    toolVersion = "14.3.0"
+    toolVersion = "14.4.0"
     configDirectory = file("config/checkstyle")
 }
 
