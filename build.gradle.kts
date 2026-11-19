@@ -72,7 +72,7 @@ tasks.build {
 }
 
 checkstyle {
-    toolVersion = "14.3.0"
+    toolVersion = "14.4.0"
     configDirectory = file("config/checkstyle")
 }
 
