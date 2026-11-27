@@ -1,7 +1,7 @@
 plugins {
     java
     checkstyle
-    id("com.github.spotbugs") version "6.5.13"
+    id("com.github.spotbugs") version "6.5.15"
     id("com.gradleup.shadow") version "9.6.1"
 }
 
